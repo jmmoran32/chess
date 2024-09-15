@@ -1,5 +1,9 @@
 package chess;
 
+import chess.ChessPiece;
+import chess.ChessPosition;
+import chess.ChessGame;
+
 /**
  * A chessboard that can hold and rearrange chess pieces.
  * <p>
@@ -28,7 +32,7 @@ public class ChessBoard {
      * @param piece    the piece to add
      */
     public void addPiece(ChessPosition position, ChessPiece piece) {
-        this.board[position.getRow()][position.getColumn()] = piece;
+        this.board[position.getRow() - 1][position.getColumn() - 1] = piece;
     }
 
     /**
@@ -39,7 +43,11 @@ public class ChessBoard {
      * position
      */
     public ChessPiece getPiece(ChessPosition position) {
-        return this.board[position.getRow()][position.getColumn()];
+        return this.board[position.getRow() - 1][position.getColumn() - 1];
+    }
+
+    public ChessPiece getPiece(int m, int n) {
+        return this.board[m][n];
     }
 
     /**
@@ -71,10 +79,10 @@ public class ChessBoard {
      * places a piece in a box
      */
     public void boxPiece(ChessPosition position) {
-        int m = position.getRow();
-        int n = position.getColumn();
+        int m = position.getRow() - 1;
+        int n = position.getColumn() - 1;
         if(this.board[m][n] == null) {
-            System.out.println(String.format("This position (%d:%d) is already empty!", position.getRow(), position.getColumn()));
+            System.out.println(String.format("This position (%d:%d) is already empty!", position.getRow() - 1, position.getColumn() - 1));
             return; 
         }
 
