@@ -9,9 +9,12 @@ import java.util.Collection;
  * signature of the existing methods.
  */
 public class ChessGame {
+    private static int iterator = 1;
+    private int obid;
+    private static final int clid = 3;
 
     public ChessGame() {
-
+        this.obid = iterator++;
     }
 
     /**

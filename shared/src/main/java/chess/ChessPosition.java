@@ -9,10 +9,14 @@ package chess;
 public class ChessPosition {
     int row;
     int col;
+    private static int iterator = 1;
+    private int obid;
+    private static final int clid = 11;
 
     public ChessPosition(int row, int col) {
         this.row = row;
         this.col = col;
+        this.obid = iterator++;
     }
 
     /**

@@ -12,10 +12,14 @@ import java.util.ArrayList;
 public class ChessPiece {
     private ChessGame.TeamColor color;
     private PieceType type;
+    private static int iterator = 1;
+    private int obid;
+    private static final int clid = 7;
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.color = pieceColor;
         this.type = type;
+        this.clid = iterator++;
     }
 
     /**

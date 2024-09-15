@@ -16,6 +16,9 @@ public class ChessBoard {
     private byte wbn;
     private ChessPiece[] blackBox;
     private byte bbn;
+    private static int iterator = 1;
+    private int obid;
+    private static final int clid = 1;
 
     public ChessBoard() {
         this.board = new ChessPiece[8][8];
@@ -23,6 +26,7 @@ public class ChessBoard {
         this.blackBox = new ChessPiece[32];
         wbn = 0;
         bbn = 0;
+        this.obid = iterator++;
     }
 
     /**
@@ -110,4 +114,5 @@ public class ChessBoard {
         for(byte i = 0; i < 64; i++) this.whiteBox[i] = null;
         for(byte i = 0; i < 64; i++) this.blackBox[i] = null;
     }
+
 }

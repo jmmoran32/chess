@@ -7,15 +7,19 @@ package chess;
  * signature of the existing methods.
  */
 public class ChessMove {
-    ChessPosition start;
-    ChessPosition end;
-    ChessPiece.PieceType promotion;
+    private ChessPosition start;
+    private ChessPosition end;
+    private ChessPiece.PieceType promotion;
+    private static int iterator = 1;
+    private int obid;
+    private static final int clid = 5;
 
     public ChessMove(ChessPosition startPosition, ChessPosition endPosition,
                      ChessPiece.PieceType promotionPiece) {
         this.start = startPosition;
         this.end = endPosition;
         this.promotion = promotionPiece;
+        this.obid = iterator++;
     }
 
     /**
