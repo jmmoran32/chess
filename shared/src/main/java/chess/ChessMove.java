@@ -22,6 +22,15 @@ public class ChessMove {
         this.obid = iterator++;
     }
 
+    public int hashCode() {
+        int hash = clid;
+        int factor = 51;
+        hash = factor * hash + (this.start != null ? this.start.hashCode() : 0);
+        hash = factor * hash + (this.end != null ? this.end.hashCode() : 0);
+        hash = factor * hash + (this.promotion != null ? this.promotion.hashCode() : 0);
+        return hash;
+    }
+
     /**
      * @return ChessPosition of starting location
      */

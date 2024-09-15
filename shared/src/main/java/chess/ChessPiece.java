@@ -19,7 +19,7 @@ public class ChessPiece {
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.color = pieceColor;
         this.type = type;
-        this.clid = iterator++;
+        this.obid = iterator++;
     }
 
     /**
@@ -32,6 +32,14 @@ public class ChessPiece {
         KNIGHT,
         ROOK,
         PAWN
+    }
+
+    public int hashCode() {
+        int hash = clid;
+        int factor = 83;
+        hash = factor * hash + (this.color != null ? this.color.hashCode() : 0);
+        hash = factor * hash + (this.type != null ? this.type.hashCode() : 0);
+        return hash;
     }
 
     /**

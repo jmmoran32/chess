@@ -19,6 +19,14 @@ public class ChessPosition {
         this.obid = iterator++;
     }
 
+    public int hashCode() {
+        int hash = obid;
+        int factor = 79;
+        hash = factor * hash + Integer.hashCode(this.row);
+        hash = factor * hash + Integer.hashCode(this.col);
+        return hash;
+    }
+
     /**
      * @return which row this position is in
      * 1 codes for the bottom row
