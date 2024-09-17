@@ -19,6 +19,12 @@ public class ChessPosition {
         this.obid = iterator++;
     }
 
+    public boolean equals(ChessPosition op) {
+       if(this.row != op.getRow()) return false;
+       if(this.col != op.getColumn()) return false;
+       return true;
+    }
+
     public int hashCode() {
         int hash = obid;
         int factor = 79;

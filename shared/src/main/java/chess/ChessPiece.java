@@ -34,6 +34,12 @@ public class ChessPiece {
         PAWN
     }
 
+    public boolean equals(ChessPiece op) {
+        if(!this.color.equals(op.getTeamColor())) return false;
+        if(!this.type.equals(op.getPieceType())) return false;
+        return true;
+    }
+
     public int hashCode() {
         int hash = clid;
         int factor = 83;

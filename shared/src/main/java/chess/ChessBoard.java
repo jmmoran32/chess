@@ -115,4 +115,11 @@ public class ChessBoard {
         for(byte i = 0; i < 64; i++) this.blackBox[i] = null;
     }
 
+    public boolean equals(ChessBoard op) {
+       for(int i = 0; i < 8; i++) 
+           for(int j = 0; i < 8; j++) 
+                if(!this.getPiece(i, j).equals(op.getPiece(i, j))) return false;
+       return true;
+    }
+
 }
