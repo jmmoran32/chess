@@ -48,6 +48,32 @@ public class ChessPiece {
         return hash;
     }
 
+    public char getPieceChar() {
+        char c = 'U';
+        switch(this.type) {
+            case(PieceType.PAWN) :
+                c = 'p';
+                break;
+            case(PieceType.ROOK) :
+                c = 'r';
+                break;
+            case(PieceType.KNIGHT) :
+                c = 'k';
+                break;
+            case(PieceType.BISHOP) :
+                c = 'b';
+                break;
+            case(PieceType.QUEEN) :
+                c = 'q';
+                break;
+            case(PieceType.KING) :
+                c = 'k';
+                break;
+        }
+         if(this.color.equals(ChessGame.TeamColor.WHITE)) Character.toUpperCase(c);
+         return c;     
+        }
+
     /**
      * @return Which team this chess piece belongs to
      */
