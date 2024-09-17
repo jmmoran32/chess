@@ -22,13 +22,25 @@ public class ChessMove {
         this.obid = iterator++;
     }
 
-    public boolean equals(ChessMove op) {
-       if(!this.start.equals(op.getStartPosition())) return false;
-       if(!this.end.equals(op.getEndPosition())) return false;
-       if(!this.promotion.equals(op.getPromotionPiece())) return false;
-       return true;
+    @Override
+    public String toString() {
+       StringBuilder sb = new StringBuilder();
+       sb.append(String.format("{s:%d | e:%d |", this.start, this.end));
+       if(this.promotion == null) sb.append(" p:null}");
+       else sb.append(String.format(" p:%s}", promotion.toString()));
+       return sb.toString();
     }
 
+    @Override
+    public boolean equals(Object ob) {
+        ChessMove op = (ChessMove) ob;
+        if(!this.start.equals(op.getStartPosition())) return false;
+        if(!this.end.equals(op.getEndPosition())) return false;
+        if(!this.promotion.equals(op.getPromotionPiece())) return false;
+        return true;
+    }
+
+    @Override
     public int hashCode() {
         int hash = clid;
         int factor = 51;

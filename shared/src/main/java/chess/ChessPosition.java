@@ -19,18 +19,26 @@ public class ChessPosition {
         this.obid = iterator++;
     }
 
-    public boolean equals(ChessPosition op) {
-       if(this.row != op.getRow()) return false;
-       if(this.col != op.getColumn()) return false;
-       return true;
+    @Override
+    public boolean equals(Object ob) {
+        ChessPosition op = (ChessPosition) ob;
+        if(this.row != op.getRow()) return false;
+        if(this.col != op.getColumn()) return false;
+        return true;
     }
 
+    @Override
     public int hashCode() {
         int hash = obid;
         int factor = 79;
         hash = factor * hash + Integer.hashCode(this.row);
         hash = factor * hash + Integer.hashCode(this.col);
         return hash;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("[row: %d | col %d]", this.row, this.col);
     }
 
     /**

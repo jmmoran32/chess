@@ -34,18 +34,26 @@ public class ChessPiece {
         PAWN
     }
 
-    public boolean equals(ChessPiece op) {
+    @Override
+    public boolean equals(Object ob) {
+        ChessPiece op = (ChessPiece) ob;
         if(!this.color.equals(op.getTeamColor())) return false;
         if(!this.type.equals(op.getPieceType())) return false;
         return true;
     }
 
+    @Override
     public int hashCode() {
         int hash = clid;
         int factor = 83;
         hash = factor * hash + (this.color != null ? this.color.hashCode() : 0);
         hash = factor * hash + (this.type != null ? this.type.hashCode() : 0);
         return hash;
+    }
+
+    @Override
+    public String toString() {
+       return String.format("[%s %s]", this.color.toString(), this.type.toString());
     }
 
     public char getPieceChar() {

@@ -122,20 +122,20 @@ public class ChessBoard {
        return true;
     }
 
-    /*
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         ChessPiece p;
-        sb.append('|');
         for(int i = 0; i < 8; i++) {
+            sb.append('|');
             for(int j = 0; j < 8; j++) {
                p = this.board[i][j];
                if(p == null) sb.append(" |");
                else sb.append(String.format("%c|", p.getPieceChar()));
             }
-         
+            sb.append('\n');
         }
+        return sb.toString();
     }
-    */
 
 }
