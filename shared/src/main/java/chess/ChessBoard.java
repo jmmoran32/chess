@@ -3,6 +3,8 @@ package chess;
 import chess.ChessPiece;
 import chess.ChessPosition;
 import chess.ChessGame;
+import java.util.Objects;
+import java.util.Arrays;
 
 /**
  * A chessboard that can hold and rearrange chess pieces.
@@ -36,7 +38,11 @@ public class ChessBoard {
      * @param piece    the piece to add
      */
     public void addPiece(ChessPosition position, ChessPiece piece) {
-        this.board[position.getRow() - 1][position.getColumn() - 1] = piece;
+        int m;
+        int n;
+        m = 8 - position.getRow();
+        n = position.getColumn() - 1;
+        this.board[m][n] = piece;
     }
 
     /**
@@ -47,7 +53,12 @@ public class ChessBoard {
      * position
      */
     public ChessPiece getPiece(ChessPosition position) {
-        return this.board[position.getRow() - 1][position.getColumn() - 1];
+        int m;
+        int n;
+        m = 8 - position.getRow();
+        n = position.getColumn() - 1;
+        //System.out.println(String.format("Getting Piece at actual position %d, %d", m, n));
+        return this.board[m][n];
     }
 
     public ChessPiece getPiece(int m, int n) {
@@ -115,10 +126,22 @@ public class ChessBoard {
         for(byte i = 0; i < 64; i++) this.blackBox[i] = null;
     }
 
-    public boolean equals(ChessBoard op) {
-       for(int i = 0; i < 8; i++) 
-           for(int j = 0; i < 8; j++) 
-                if(!this.getPiece(i, j).equals(op.getPiece(i, j))) return false;
+    @Override
+    public int hashCode() {return Arrays.deepHashCode(this.board);}
+
+    @Override
+    public boolean equals(Object ob) {
+        ChessBoard op = (ChessBoard) ob;
+        ChessPiece bucket;
+        for(int i = 0; i < 8; i++) 
+           for(int j = 0; j < 8; j++) { 
+                bucket = op.getPiece(i, j);
+                if(bucket == null) {
+                    if(this.board[i][j] != null) return false;
+                    continue;
+                }
+                if(!bucket.equals(this.board[i][j])) return false;
+           }
        return true;
     }
 

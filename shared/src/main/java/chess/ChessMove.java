@@ -36,7 +36,10 @@ public class ChessMove {
         ChessMove op = (ChessMove) ob;
         if(!this.start.equals(op.getStartPosition())) return false;
         if(!this.end.equals(op.getEndPosition())) return false;
-        if(!this.promotion.equals(op.getPromotionPiece())) return false;
+        if(op.getPromotionPiece() == null || this.promotion == null) {
+            if(this.promotion != op.getPromotionPiece()) return false;
+        }
+        else if(!this.promotion.equals(op.getPromotionPiece())) return false;
         return true;
     }
 

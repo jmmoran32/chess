@@ -1,5 +1,6 @@
 package chess;
 
+import java.util.Objects;
 /**
  * Represents a single square position on a chess board
  * <p>
@@ -14,7 +15,7 @@ public class ChessPosition {
     private static final int clid = 11;
 
     public ChessPosition(int row, int col) {
-        this.row = row;
+        this.row =  row;
         this.col = col;
         this.obid = iterator++;
     }
@@ -29,11 +30,13 @@ public class ChessPosition {
 
     @Override
     public int hashCode() {
-        int hash = obid;
+        /*int hash = obid;
         int factor = 79;
         hash = factor * hash + Integer.hashCode(this.row);
         hash = factor * hash + Integer.hashCode(this.col);
         return hash;
+        */
+        return Objects.hash(this.row, this.col);
     }
 
     @Override
