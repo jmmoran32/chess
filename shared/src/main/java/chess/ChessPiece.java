@@ -116,37 +116,75 @@ public class ChessPiece {
         switch(this.type) {     //black is top
             case PieceType.PAWN:
                 if(this.color == ChessGame.TeamColor.BLACK) {
-                    if(m == 1 && board.getPiece(m + 2, n) == null)      //BLACK ^ first move 
-                        moves.add(new ChessMove(myPosition, trans(m, n), null)); 
+                    if(m == 1 && (board.getPiece(m + 1, n) == null && board.getPiece(m + 2, n) == null))      //BLACK ^ first move 
+                        moves.add(new ChessMove(myPosition, trans(m + 2, n), null)); 
                     if(board.getPiece(m + 1, n) == null)                //BLACK ^ down
-                        moves.add(new ChessMove(myPosition, trans(m + 1, n), null));
+                        if(m == 6) {
+                            moves.add(new ChessMove(myPosition, trans(m + 1, n), PieceType.ROOK));
+                            moves.add(new ChessMove(myPosition, trans(m + 1, n), PieceType.KNIGHT));
+                            moves.add(new ChessMove(myPosition, trans(m + 1, n), PieceType.BISHOP));
+                            moves.add(new ChessMove(myPosition, trans(m + 1, n), PieceType.QUEEN));
+                        }
+                        else moves.add(new ChessMove(myPosition, trans(m + 1, n), null));
 
                     if(m + 1 < 8 && n + 1 < 8) { 
                         bucket = board.getPiece(m + 1, n + 1);
                         if(bucket != null && bucket.getTeamColor() == ChessGame.TeamColor.WHITE)    //BLACK ^ capture right
-                            moves.add(new ChessMove(myPosition, trans(m + 1, n + 1), null));
+                            if(m == 6) {
+                                moves.add(new ChessMove(myPosition, trans(m + 1, n + 1), PieceType.ROOK));
+                                moves.add(new ChessMove(myPosition, trans(m + 1, n + 1), PieceType.KNIGHT));
+                                moves.add(new ChessMove(myPosition, trans(m + 1, n + 1), PieceType.BISHOP));
+                                moves.add(new ChessMove(myPosition, trans(m + 1, n + 1), PieceType.QUEEN));
+                            }
+                            else moves.add(new ChessMove(myPosition, trans(m + 1, n + 1), null));
                     }
                     if(m + 1 < 8 && n - 1 >=0) {
                         bucket = board.getPiece(m + 1, n - 1);
                         if(bucket != null && bucket.getTeamColor() == ChessGame.TeamColor.WHITE)    //BLACK ^ capture left
-                            moves.add(new ChessMove(myPosition, trans(m + 1, n - 1), null));
+                            if(m == 6) {
+                                moves.add(new ChessMove(myPosition, trans(m + 1, n - 1), PieceType.ROOK));
+                                moves.add(new ChessMove(myPosition, trans(m + 1, n - 1), PieceType.KNIGHT));
+                                moves.add(new ChessMove(myPosition, trans(m + 1, n - 1), PieceType.BISHOP));
+                                moves.add(new ChessMove(myPosition, trans(m + 1, n - 1), PieceType.QUEEN));
+                            }
+                            else moves.add(new ChessMove(myPosition, trans(m + 1, n - 1), null));
                     }
                 }
                 else {
-                    if(m == 6 && board.getPiece(m - 2, n) == null)      //WHITE ^ first move 
-                        moves.add(new ChessMove(myPosition, trans(m - 2, n), null)); 
-                    if(board.getPiece(m - 1, n) == null)                //WHITE ^ up
-                        moves.add(new ChessMove(myPosition, trans(m - 1, n), null));
+                    if(board.getPiece(m - 1, n) == null) {               //WHITE ^ up
+                        if(m == 1) {
+                            moves.add(new ChessMove(myPosition, trans(m - 1, n), PieceType.ROOK));
+                            moves.add(new ChessMove(myPosition, trans(m - 1, n), PieceType.KNIGHT));
+                            moves.add(new ChessMove(myPosition, trans(m - 1, n), PieceType.BISHOP));
+                            moves.add(new ChessMove(myPosition, trans(m - 1, n), PieceType.QUEEN));
+                        }
+                        else moves.add(new ChessMove(myPosition, trans(m - 1, n), null));
+                        if(m == 6 && (board.getPiece(m - 2, n) == null))                  //White First Move
+                            moves.add(new ChessMove(myPosition, trans(m - 2, n), null));
+                    }
                     if(m - 1 >= 0 && n + 1 < 8) {
                         bucket = board.getPiece(m - 1, n + 1);
-                        if(bucket != null && bucket.getTeamColor() == ChessGame.TeamColor.BLACK)    //WHITE ^ capture right
+                        if(bucket != null && bucket.getTeamColor() == ChessGame.TeamColor.BLACK) {   //WHITE ^ capture right
+                            if(m == 1) {
+                                moves.add(new ChessMove(myPosition, trans(m - 1, n + 1), PieceType.ROOK));
+                                moves.add(new ChessMove(myPosition, trans(m - 1, n + 1), PieceType.KNIGHT));
+                                moves.add(new ChessMove(myPosition, trans(m - 1, n + 1), PieceType.BISHOP));
+                                moves.add(new ChessMove(myPosition, trans(m - 1, n + 1), PieceType.QUEEN));
+                            }
                             moves.add(new ChessMove(myPosition, trans(m - 1, n + 1), null));
+                        }
                     }
 
                     if(m - 1 >= 0 && n - 1 >= 0) {
                         bucket = board.getPiece(m - 1, n - 1);
                         if(bucket != null && bucket.getTeamColor() == ChessGame.TeamColor.BLACK)    //WHITE ^ capture left
-                            moves.add(new ChessMove(myPosition, trans(m - 1, n - 1), null));
+                            if(m == 1) {
+                                moves.add(new ChessMove(myPosition, trans(m - 1, n - 1), PieceType.ROOK));
+                                moves.add(new ChessMove(myPosition, trans(m - 1, n - 1), PieceType.KNIGHT));
+                                moves.add(new ChessMove(myPosition, trans(m - 1, n - 1), PieceType.BISHOP));
+                                moves.add(new ChessMove(myPosition, trans(m - 1, n - 1), PieceType.QUEEN));
+                            }
+                            else moves.add(new ChessMove(myPosition, trans(m - 1, n - 1), null));
                     }
                 }
                 break;
@@ -452,30 +490,61 @@ public class ChessPiece {
                     if(bucket == null || bucket.getTeamColor() != this.color) {
                         moves.add(new ChessMove(myPosition, trans(m - 1, n), null));
                     }
+                    if(n + 1 < 8) {     //up-right
+                        bucket = board.getPiece(m - 1, n + 1);
+                        if(bucket == null || bucket.getTeamColor() != this.color) {
+                            moves.add(new ChessMove(myPosition, trans(m - 1, n + 1), null));
+                        }
+                    }
+                    if(n - 1 >= 0) {     //up-left
+                        bucket = board.getPiece(m - 1, n - 1);
+                        if(bucket == null || bucket.getTeamColor() != this.color) {
+                            moves.add(new ChessMove(myPosition, trans(m - 1, n - 1), null));
+                        }
+                    }
                 }
 
                 if(m + 1 < 8) {        //down
-                    bucket = board.getPiece(m, n);
+                    bucket = board.getPiece(m + 1, n);
                     if(bucket == null || bucket.getTeamColor() != this.color) {
                         moves.add(new ChessMove(myPosition, trans(m + 1, n), null));
                     }
+                    if(n + 1 < 8) {     //down-right
+                        bucket = board.getPiece(m + 1, n + 1);
+                        if(bucket == null || bucket.getTeamColor() != this.color) {
+                            moves.add(new ChessMove(myPosition, trans(m + 1, n + 1), null));
+                        }
+                    }
+                    if(n - 1 >= 0) {     //down-left
+                        bucket = board.getPiece(m + 1, n - 1);
+                        if(bucket == null || bucket.getTeamColor() != this.color) {
+                            moves.add(new ChessMove(myPosition, trans(m + 1, n - 1), null));
+                        }
+                    }
                 }
                 if(n - 1 >= 0) {        //left
-                    bucket = board.getPiece(m, n);
+                    bucket = board.getPiece(m, n - 1);
                     if(bucket == null || bucket.getTeamColor() != this.color) {
                         moves.add(new ChessMove(myPosition, trans(m, n - 1), null));
                     }
                 }
                 if(n + 1 < 8) {        //right
-                    bucket = board.getPiece(m, n);
+                    bucket = board.getPiece(m, n + 1);
                     if(bucket == null || bucket.getTeamColor() != this.color) {
                         moves.add(new ChessMove(myPosition, trans(m, n + 1), null));
                     }
                 }
                 break;
         }
-        
+        //debugPieceMoves(board, moves); 
         return moves;
+    }
+
+    private void debugPieceMoves(ChessBoard b, ArrayList<ChessMove> moves) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("%s\n", b.toString()));
+        for(ChessMove m : moves) sb.append(String.format("%s ", m.toString())); 
+        System.out.println(sb.toString());
     }
 
     private ChessPosition trans(int m, int n) {

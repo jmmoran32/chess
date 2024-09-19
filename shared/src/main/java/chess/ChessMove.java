@@ -25,7 +25,7 @@ public class ChessMove {
     @Override
     public String toString() {
        StringBuilder sb = new StringBuilder();
-       sb.append(String.format("{s:%d | e:%d |", this.start, this.end));
+       sb.append(String.format("{s:%s | e:%s |", this.start.toString(), this.end.toString()));
        if(this.promotion == null) sb.append(" p:null}");
        else sb.append(String.format(" p:%s}", promotion.toString()));
        return sb.toString();
