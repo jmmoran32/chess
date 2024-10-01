@@ -31,6 +31,15 @@ public class ChessBoard {
         this.obid = iterator++;
     }
 
+    public ChessPosition kingAt(ChessGame.TeamColor c) {
+        ChessPiece king = new ChessPiece(c, ChessPiece.PieceType.KING);
+        for(int i = 0; i < 8; i++)
+            for(int j = 0; j < 8; j++) 
+                if(this.board[i][j].equals(king))
+                    return new ChessPosition(8 - i, j + 1);
+        return null;
+    }
+
     /**
      * Adds a chess piece to the chessboard
      *
