@@ -5,6 +5,8 @@ import chess.ChessPosition;
 import chess.ChessGame;
 import java.util.Objects;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.ArrayList;
 
 /**
  * A chessboard that can hold and rearrange chess pieces.
@@ -38,6 +40,15 @@ public class ChessBoard {
                 if(this.board[i][j].equals(king))
                     return new ChessPosition(8 - i, j + 1);
         return null;
+    }
+
+    public Collection<ChessPiece> getTeam(ChessGame.TeamColor c) {
+        ArrayList<ChessPiece> pieces = new ArrayList<ChessPiece>();
+        for(int i = 0; i < 8; i++)
+            for(int j = 0; j < 8; j++)
+                if(this.board[i][j].getTeamColor() == c)
+                    pieces.add(this.board[i][j]);
+        return pieces;
     }
 
     /**

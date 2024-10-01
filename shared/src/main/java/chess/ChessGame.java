@@ -1,6 +1,7 @@
 package chess;
 
 import java.util.Collection;
+import java.util.ArrayList;
 
 /**
  * For a class that can manage a chess game, making moves on a board
@@ -9,19 +10,38 @@ import java.util.Collection;
  * signature of the existing methods.
  */
 public class ChessGame {
+    private boolean whiteTurn;
+    private ChessBoard board;
+    private ChessPosition bKing;
+    private ChessPosition wKing;
+    private boolean bCheck;
+    private boolean wCheck;
     private static int iterator = 1;
     private int obid;
     private static final int clid = 3;
 
     public ChessGame() {
         this.obid = iterator++;
+        this.whiteTurn = true;
+        this.board = new ChessBoard();
+        this.bKing = new ChessPosition(8, 5);
+        this.wKing = new ChessPosition(1, 5);
+        this.wCheck = false;
+        this.bCheck = false;
     }
+
+    /*
+    public ChessGame(ChessBoard board) {
+        this.obid = iterator++;
+        setBoard(board);
+    }
+    */
 
     /**
      * @return Which team's turn it is
      */
     public TeamColor getTeamTurn() {
-        throw new RuntimeException("Not implemented");
+        return this.whiteTurn ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
     }
 
     /**
@@ -30,7 +50,7 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        throw new RuntimeException("Not implemented");
+        this.whiteTurn = (team == ChessGame.TeamColor.WHITE);
     }
 
     /**
@@ -49,7 +69,11 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        throw new RuntimeException("Not implemented");
+        Collection<ChessMove> moves = new ArrayList<ChessMove>();
+        ChessPiece p = board.getPiece(startPosition);
+        moves = p.pieceMoves(this.board, startPosition);
+        //ChessRule.filter(moves);
+        return moves;
     }
 
     /**
@@ -69,7 +93,28 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        ChessPosition bucket;
+        ChessPiece p;
+        ArrayList<ChessMove> pMoves;
+        ChessPosition myKingPosition;
+
+        myKingPosition = teamColor == ChessGame.TeamColor.BLACK ? this.bKing : this.wKing;
+
+        for(int i = 1; i <= 8; i++)
+            for(int j = 1; j <= 8; j++) {
+                bucket = new ChessPosition(i, j);
+                p = this.board.getPiece(bucket);
+                if(p == null)
+                    continue;
+                if(p.getTeamColor() == teamColor)
+                    continue;
+                pMoves = (ArrayList<ChessMove>) p.pieceMoves(this.board, bucket);
+                for(ChessMove mov : pMoves) {
+                    if(myKingPosition.equals(mov.getEndPosition()))
+                        return true;
+                }
+            }
+        return false;
     }
 
     /**
@@ -99,7 +144,13 @@ public class ChessGame {
      * @param board the new board to use
      */
     public void setBoard(ChessBoard board) {
-        throw new RuntimeException("Not implemented");
+        this.board = board;
+        //TODO how do I restore turn from a loaded board?
+        this.whiteTurn = true; 
+        this.bKing = board.kingAt(ChessGame.TeamColor.BLACK);
+        this.wKing = board.kingAt(ChessGame.TeamColor.WHITE);
+        this.bCheck = isInCheck(ChessGame.TeamColor.BLACK);
+        this.wCheck = isInCheck(ChessGame.TeamColor.WHITE);
     }
 
     /**
@@ -108,6 +159,6 @@ public class ChessGame {
      * @return the chessboard
      */
     public ChessBoard getBoard() {
-        throw new RuntimeException("Not implemented");
+        return this.board;
     }
 }
