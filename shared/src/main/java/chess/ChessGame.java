@@ -109,13 +109,23 @@ public class ChessGame {
                 if(p.getTeamColor() == teamColor)
                     continue;
                 pMoves = (ArrayList<ChessMove>) p.pieceMoves(this.board, bucket);
-                for(ChessMove mov : pMoves) {
+                for(ChessMove mov : pMoves) 
                     if(myKingPosition.equals(mov.getEndPosition()))
                         return true;
-                }
             }
         return false;
     }
+
+    private ArrayList<ChessPiece> getTeamPieces(TeamColor teamColor) {
+        ArrayList<ChessPiece> pieces = new ArrayList<ChessPiece>();
+        for(int i = 0; i < 8; i++)
+            for(int j = 0; j < 8; j++)
+                if(board.getPiece(i, j).getTeamColor() == teamColor)
+                    pieces.add(board.getPiece(i, j));
+        return pieces;
+    }
+
+    private boolean isPositionChecked(ChessPosition position) {}
 
     /**
      * Determines if the given team is in checkmate
@@ -124,7 +134,28 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        if(!isInCheck(teamColor)) return false;
+
+        ChessPiece pk;
+        ArrayList<ChessMove> pMoves;
+        ArrayList<ChessMove> kMoves;
+        ChessPosition myKingPosition;
+        ArrayList<ChessPiece> enemyTeam;
+        ArrayList<ChessPiece> checkingPieces;
+
+        myKingPosition = teamColor == ChessGame.TeamColor.BLACK ? this.bKing : this.wKing;
+        pk = board.getPiece(myKingPosition);
+        kMoves = (ArrayList<ChessMove>) pk.pieceMoves(this.board, myKingPosition);
+
+        
+
+        for(ChessMove mov : kMoves) {
+            if(!isPositionChecked(mov.getEndPosition()))
+                return false;
+            
+        }
+
+        return true;
     }
 
     /**
