@@ -56,6 +56,10 @@ public class ChessPiece {
        return String.format("[%s %s]", this.color.toString(), this.type.toString());
     }
 
+    public ChessPiece copy() {
+        return new ChessPiece(this.color, this.type);
+    }
+
     public char getPieceChar() {
         char c = 'U';
         switch(this.type) {
