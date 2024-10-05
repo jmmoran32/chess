@@ -540,15 +540,7 @@ public class ChessPiece {
                 }
                 break;
         }
-        //debugPieceMoves(board, moves); 
         return moves;
-    }
-
-    private void debugPieceMoves(ChessBoard b, ArrayList<ChessMove> moves) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(String.format("%s\n", b.toString()));
-        for(ChessMove m : moves) sb.append(String.format("%s ", m.toString())); 
-        System.out.println(sb.toString());
     }
 
     private ChessPosition trans(int m, int n) {
