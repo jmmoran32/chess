@@ -12,10 +12,6 @@ import java.util.ArrayList;
 public class ChessGame {
     private boolean whiteTurn;
     private ChessBoard board;
-    private ChessPosition bKing;
-    private ChessPosition wKing;
-    private boolean bCheck;
-    private boolean wCheck;
     private static int iterator = 1;
     private int obid;
     private static final int clid = 3;
@@ -24,10 +20,6 @@ public class ChessGame {
         this.obid = iterator++;
         this.whiteTurn = true;
         this.board = new ChessBoard();
-        this.bKing = new ChessPosition(8, 5);
-        this.wKing = new ChessPosition(1, 5);
-        this.wCheck = false;
-        this.bCheck = false;
     }
 
     /*
@@ -69,17 +61,26 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
+        System.out.println(String.format("\nEvaluating valid moves from %s", startPosition.toString()));
         ArrayList<ChessMove> moves;
         ChessPiece p = board.getPiece(startPosition);
         moves = (ArrayList<ChessMove>) p.pieceMoves(this.board, startPosition);
-        //ChessRule.filter(moves);
+        System.out.println(String.format("Moves to be evaluated: %d\n%s", moves.size(), moves.toString()));
         ChessMove m;
+        ArrayList<ChessMove> validMoves = new ArrayList<ChessMove>();
         for(int i = 0; i < moves.size(); i++) {
            m = moves.get(i);
-           if(!testMove(m))
-               moves.remove(i);
+           System.out.println(String.format("Now testing %d: %s", i, m.toString()));
+           if(!testMove(m)) {
+               System.out.println(String.format("Removed %s from possible moves", moves.get(i)));
+               continue;
+           }
+           else {
+               validMoves.add(m);
+           }
         }
-        return moves;
+        //System.out.println(String.format("Valid moves remaining: %d\n%s", validMoves.size(), validMoves.toString()));
+        return validMoves;
     }
 
     private boolean testMove(ChessMove mov) {
@@ -91,6 +92,7 @@ public class ChessGame {
 
         this.board.addPiece(mov.getStartPosition(), null);
         this.board.addPiece(mov.getEndPosition(), p);
+        //System.out.println(String.format("Board after test: \n%s", this.board.toString()));
         if(isInCheck(c)) 
             isChecked = true;
         this.board.addPiece(mov.getEndPosition(), at);
@@ -106,13 +108,23 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
+        //System.out.println(String.format("Making a move: %s", move.toString()));
         ChessGame.TeamColor c;
         ChessPiece p = this.board.getPiece(move.getStartPosition());
+        if(p == null)
+            throw new InvalidMoveException(String.format("%s does not contain a piece!", move.getStartPosition()));
         c = p.getTeamColor();
-        if(!validMoves(move.getStartPosition()).contains(move))
-            throw new InvalidMoveException("Invalid move!");
+        ArrayList<ChessMove> validMoves = (ArrayList<ChessMove>) validMoves(move.getStartPosition());
+        if(!validMoves.contains(move))
+            throw new InvalidMoveException(String.format("%s is not a valid move for %s\nValid moves: %s", move.getEndPosition(), move.getStartPosition(), validMoves.toString()));
         this.board.addPiece(move.getStartPosition(), null);
-        this.board.addPiece(move.getEndPosition(), p);
+        if(move.getPromotionPiece() != null) {
+            ChessPiece promotee = new ChessPiece(c, move.getPromotionPiece()); 
+            this.board.addPiece(move.getEndPosition(), promotee);
+        }
+        else {
+            this.board.addPiece(move.getEndPosition(), p);
+        }
     }
 
     /**
@@ -127,8 +139,10 @@ public class ChessGame {
         ArrayList<ChessMove> pMoves;
         ChessPosition myKingPosition;
 
-        myKingPosition = teamColor == ChessGame.TeamColor.BLACK ? this.bKing : this.wKing;
+        myKingPosition = teamColor == ChessGame.TeamColor.BLACK ? this.board.kingAt(ChessGame.TeamColor.BLACK) : this.board.kingAt(ChessGame.TeamColor.WHITE);
 
+        if(myKingPosition == null)
+            return false;
         for(int i = 1; i <= 8; i++)
             for(int j = 1; j <= 8; j++) {
                 bucket = new ChessPosition(i, j);
@@ -145,12 +159,15 @@ public class ChessGame {
         return false;
     }
 
-    private ArrayList<ChessPiece> getTeamPieces(TeamColor teamColor) {
-        ArrayList<ChessPiece> pieces = new ArrayList<ChessPiece>();
+    private ArrayList<ChessPosition> getTeamPositions(TeamColor teamColor) {
+        ArrayList<ChessPosition> pieces = new ArrayList<ChessPosition>();
         for(int i = 0; i < 8; i++)
-            for(int j = 0; j < 8; j++)
+            for(int j = 0; j < 8; j++) {
+                if(board.getPiece(i, j) == null)
+                    continue;
                 if(board.getPiece(i, j).getTeamColor() == teamColor)
-                    pieces.add(board.getPiece(i, j));
+                    pieces.add(trans(i, j));
+            }
         return pieces;
     }
 
@@ -167,20 +184,11 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        ChessPosition myKingPos;
-        ArrayList<ChessPosition> criticalTiles = new ArrayList<ChessPosition>();
-        int m;
-        int n;
-
-        myKingPos = teamColor == ChessGame.TeamColor.WHITE ? this.wKing : this.bKing;
-        m = 8 - myKingPos.getRow();
-        n = myKingPos.getColumn() - 1;
-        criticalTiles.add(myKingPos);
-        for(ChessMove mov : this.board.getPiece(myKingPos).pieceMoves(this.board, myKingPos))
-            criticalTiles.add(mov.getEndPosition());
-        
-
-        return false;
+        if(!isInCheck(teamColor)) return false;
+        for(ChessPosition p : getTeamPositions(teamColor))
+            if(validMoves(p).size() > 0)
+                return false;
+        return true;
     }
 
     /**
@@ -191,7 +199,10 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        for(ChessPosition p : getTeamPositions(teamColor))
+            if(validMoves(p).size() > 0)
+                return false;
+        return true;
     }
 
     /**
@@ -203,10 +214,6 @@ public class ChessGame {
         this.board = board;
         //TODO how do I restore turn from a loaded board?
         this.whiteTurn = true; 
-        this.bKing = board.kingAt(ChessGame.TeamColor.BLACK);
-        this.wKing = board.kingAt(ChessGame.TeamColor.WHITE);
-        this.bCheck = isInCheck(ChessGame.TeamColor.BLACK);
-        this.wCheck = isInCheck(ChessGame.TeamColor.WHITE);
     }
 
     /**

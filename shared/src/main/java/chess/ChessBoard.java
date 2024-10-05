@@ -34,11 +34,16 @@ public class ChessBoard {
     }
 
     public ChessPosition kingAt(ChessGame.TeamColor c) {
-        ChessPiece king = new ChessPiece(c, ChessPiece.PieceType.KING);
         for(int i = 0; i < 8; i++)
-            for(int j = 0; j < 8; j++) 
-                if(this.board[i][j].equals(king))
-                    return new ChessPosition(8 - i, j + 1);
+            for(int j = 0; j < 8; j++) {
+                if(this.board[i][j] == null)
+                    continue;
+                if(this.board[i][j].getPieceType() == ChessPiece.PieceType.KING && this.board[i][j].getTeamColor() == c) {
+                    ChessPosition kingAt = new ChessPosition(8 - i, j + 1);
+                    System.out.println(String.format("Found king %s king at %s", c.toString(), kingAt.toString()));
+                    return kingAt;
+                }
+            }
         return null;
     }
 
@@ -77,6 +82,7 @@ public class ChessBoard {
         int n;
         m = 8 - position.getRow();
         n = position.getColumn() - 1;
+        //System.out.println(String.format("Getting a piece from %d %d", m, n));
         //System.out.println(String.format("Getting Piece at actual position %d, %d", m, n));
         return this.board[m][n];
     }
@@ -117,7 +123,7 @@ public class ChessBoard {
         int m = position.getRow() - 1;
         int n = position.getColumn() - 1;
         if(this.board[m][n] == null) {
-            System.out.println(String.format("This position (%d:%d) is already empty!", position.getRow() - 1, position.getColumn() - 1));
+            //System.out.println(String.format("This position (%d:%d) is already empty!", position.getRow() - 1, position.getColumn() - 1));
             return; 
         }
 
