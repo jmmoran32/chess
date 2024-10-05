@@ -20,6 +20,7 @@ public class ChessGame {
         this.obid = iterator++;
         this.whiteTurn = true;
         this.board = new ChessBoard();
+        this.board.resetBoard();
     }
 
     /*
@@ -61,18 +62,18 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        System.out.println(String.format("\nEvaluating valid moves from %s", startPosition.toString()));
+        //System.out.println(String.format("\nEvaluating valid moves from %s", startPosition.toString()));
         ArrayList<ChessMove> moves;
         ChessPiece p = board.getPiece(startPosition);
         moves = (ArrayList<ChessMove>) p.pieceMoves(this.board, startPosition);
-        System.out.println(String.format("Moves to be evaluated: %d\n%s", moves.size(), moves.toString()));
+        //System.out.println(String.format("Moves to be evaluated: %d\n%s", moves.size(), moves.toString()));
         ChessMove m;
         ArrayList<ChessMove> validMoves = new ArrayList<ChessMove>();
         for(int i = 0; i < moves.size(); i++) {
            m = moves.get(i);
-           System.out.println(String.format("Now testing %d: %s", i, m.toString()));
+           //System.out.println(String.format("Now testing %d: %s", i, m.toString()));
            if(!testMove(m)) {
-               System.out.println(String.format("Removed %s from possible moves", moves.get(i)));
+               //System.out.println(String.format("Removed %s from possible moves", moves.get(i)));
                continue;
            }
            else {
@@ -114,6 +115,10 @@ public class ChessGame {
         if(p == null)
             throw new InvalidMoveException(String.format("%s does not contain a piece!", move.getStartPosition()));
         c = p.getTeamColor();
+        if(this.whiteTurn && c != ChessGame.TeamColor.WHITE)
+            throw new InvalidMoveException(String.format("The piece at %s Is not part of the team whose turn it is now!", move.toString()));
+        if(!this.whiteTurn && c == ChessGame.TeamColor.WHITE)
+            throw new InvalidMoveException(String.format("The piece at %s Is not part of the team whose turn it is now!", move.toString()));
         ArrayList<ChessMove> validMoves = (ArrayList<ChessMove>) validMoves(move.getStartPosition());
         if(!validMoves.contains(move))
             throw new InvalidMoveException(String.format("%s is not a valid move for %s\nValid moves: %s", move.getEndPosition(), move.getStartPosition(), validMoves.toString()));
@@ -125,6 +130,7 @@ public class ChessGame {
         else {
             this.board.addPiece(move.getEndPosition(), p);
         }
+        this.whiteTurn ^= true;
     }
 
     /**
@@ -199,9 +205,19 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        for(ChessPosition p : getTeamPositions(teamColor))
-            if(validMoves(p).size() > 0)
+        if(isInCheckmate(teamColor))
+            return false;
+        ArrayList<ChessPosition> teamPositions = getTeamPositions(teamColor);
+        ArrayList<ChessMove> validMoves;
+        if(teamPositions.size() == 0)
+            return true;
+        for(ChessPosition p : teamPositions) {
+            System.out.println(String.format("Now evaluating the valid moves of %s on %s", this.board.getPiece(p).toString(), p.toString()));
+            validMoves = (ArrayList<ChessMove>) validMoves(p); 
+            System.out.println(String.format("Valid moves found: %d\n%s", validMoves.size(), validMoves.toString()));
+            if(validMoves.size() > 0)
                 return false;
+        }
         return true;
     }
 

@@ -40,7 +40,7 @@ public class ChessBoard {
                     continue;
                 if(this.board[i][j].getPieceType() == ChessPiece.PieceType.KING && this.board[i][j].getTeamColor() == c) {
                     ChessPosition kingAt = new ChessPosition(8 - i, j + 1);
-                    System.out.println(String.format("Found king %s king at %s", c.toString(), kingAt.toString()));
+                    //System.out.println(String.format("Found king %s king at %s", c.toString(), kingAt.toString()));
                     return kingAt;
                 }
             }
