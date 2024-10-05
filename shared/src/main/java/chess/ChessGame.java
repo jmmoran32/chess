@@ -62,25 +62,20 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        //System.out.println(String.format("\nEvaluating valid moves from %s", startPosition.toString()));
         ArrayList<ChessMove> moves;
         ChessPiece p = board.getPiece(startPosition);
         moves = (ArrayList<ChessMove>) p.pieceMoves(this.board, startPosition);
-        //System.out.println(String.format("Moves to be evaluated: %d\n%s", moves.size(), moves.toString()));
         ChessMove m;
         ArrayList<ChessMove> validMoves = new ArrayList<ChessMove>();
         for(int i = 0; i < moves.size(); i++) {
            m = moves.get(i);
-           //System.out.println(String.format("Now testing %d: %s", i, m.toString()));
            if(!testMove(m)) {
-               //System.out.println(String.format("Removed %s from possible moves", moves.get(i)));
                continue;
            }
            else {
                validMoves.add(m);
            }
         }
-        //System.out.println(String.format("Valid moves remaining: %d\n%s", validMoves.size(), validMoves.toString()));
         return validMoves;
     }
 
@@ -93,7 +88,6 @@ public class ChessGame {
 
         this.board.addPiece(mov.getStartPosition(), null);
         this.board.addPiece(mov.getEndPosition(), p);
-        //System.out.println(String.format("Board after test: \n%s", this.board.toString()));
         if(isInCheck(c)) 
             isChecked = true;
         this.board.addPiece(mov.getEndPosition(), at);
@@ -109,7 +103,6 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        //System.out.println(String.format("Making a move: %s", move.toString()));
         ChessGame.TeamColor c;
         ChessPiece p = this.board.getPiece(move.getStartPosition());
         if(p == null)
@@ -212,9 +205,7 @@ public class ChessGame {
         if(teamPositions.size() == 0)
             return true;
         for(ChessPosition p : teamPositions) {
-            System.out.println(String.format("Now evaluating the valid moves of %s on %s", this.board.getPiece(p).toString(), p.toString()));
             validMoves = (ArrayList<ChessMove>) validMoves(p); 
-            System.out.println(String.format("Valid moves found: %d\n%s", validMoves.size(), validMoves.toString()));
             if(validMoves.size() > 0)
                 return false;
         }
