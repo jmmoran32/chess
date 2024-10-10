@@ -1,13 +1,15 @@
 package Service;
 
-public class UserService {
-    private String registration(registerRequest req) {}
+import request.*;
 
-    private String login(loginRequest req) {}
+public class UserService {
+    private String registration(RegisterRequest req) {}
+
+    private String login(LoginRequest req) {}
 
     private boolean matchHash(String password, long hash) {}
 
-    private boolean authenticate(Token t) {}
+    private boolean authenticate(String Token) {}
 
     public boolean logout(LogoutRequest req) {}
 
