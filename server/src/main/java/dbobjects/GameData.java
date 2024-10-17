@@ -21,5 +21,12 @@ public class GameData {
     public void joinWhite(String username) {this.whiteUsername = username;}
 
     public void joinBlack(String username) {this.blackUsername = username;}
+
+    public long id() {return this.id;}
+    public int gameID() {return this.gameID;}
+    public String whiteUsername() {return this.whiteUsername;}
+    public String blackUsername() {return this.blackUsername;}
+    public String gameName() {return this.gameName;}
+    public chess.ChessGame game() {return this.game;}
 }
 
