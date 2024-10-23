@@ -1,11 +1,11 @@
 package request;
 
 public class CreateRequest {
-    public String token;
+    public String authtoken;
     public String name;
 
     public CreateRequest(String t, String n) {
-        this.token = t;
+        this.authtoken = t;
         this.name = n;
     }
 }

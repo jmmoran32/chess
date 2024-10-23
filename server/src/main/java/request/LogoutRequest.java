@@ -1,9 +1,9 @@
 package request;
 
 public class LogoutRequest {
-    public String token;
+    public String authtoken;
 
     public LogoutRequest(String t) {
-        this.token = t;
+        this.authtoken = t;
     }
 }

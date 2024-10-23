@@ -21,7 +21,7 @@ public class UserDataAccess {
         UserDataAccess.table.add(new dbobjects.UserData(username, password, email));
     }
 
-    public static void deleteUsers() {UserDataAccess.table.clear();}
+    public static void clearUsers() {UserDataAccess.table.clear();}
 
     public static void write() {
         throw new RuntimeException("Not implemented");

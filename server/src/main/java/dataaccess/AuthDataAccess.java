@@ -20,6 +20,27 @@ public class AuthDataAccess {
         return null;
     }
 
+    public static String getUsername(String authToken) throws DataAccessException {
+        for(dbobjects.AuthData record : table) 
+            if(record.authToken().equals(authToken))
+                return record.username();
+        throw new DataAccessException(String.format("User not found matching authtoken %s"));
+    }
+
+    public static boolean deleteAuthToken(String authToken) {
+        boolean success = false;
+        for(int i = 0; i < table.size(); i++) {
+            if(table.get(i).authToken().equals(authToken))
+                table.remove(i);
+            success = true;
+        }
+        return success;
+    }
+
+    public static void clearAuth() {
+        AuthDataAccess.table.clear();
+    }
+
     public static void write() {
         throw new RuntimeException("Not implemented");
     }
