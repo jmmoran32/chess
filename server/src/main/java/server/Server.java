@@ -45,7 +45,6 @@ public class Server {
             return g.toJson(error_response);
         }
         catch(Exception e) {
-            //ErrorResponse error_response = new ErrorResponse("Error: server error");
             ErrorResponse error_response = new ErrorResponse(e.getMessage());
             res.status(500);
             return g.toJson(error_response);

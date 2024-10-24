@@ -13,9 +13,12 @@ public class Service {
         dbobjects.UserData user = UserDataAccess.getUser(req.username); 
         if(user != null)
             throw new AlreadyTakenException("Error: already taken");
+        System.out.println("Got past null check");
         String uuid = createAuthData();
         AuthDataAccess.createAuth(uuid, req.username);
+        System.out.println("Got past createAuth");
         UserDataAccess.createUser(req.username, req.password, req.email);
+        System.out.println("Got past createUser");
         return new RegisterResponse(req.username, uuid);
     }
 

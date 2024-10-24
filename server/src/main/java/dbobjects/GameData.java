@@ -28,5 +28,29 @@ public class GameData {
     public String blackUsername() {return this.blackUsername;}
     public String gameName() {return this.gameName;}
     public chess.ChessGame game() {return this.game;}
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        sb.append(String.format("%d, ", this.gameID));
+        if(this.whiteUsername != null)
+            sb.append(String.format("%s, ", this.whiteUsername));
+        else
+            sb.append("null, ");
+        if(this.blackUsername != null)
+            sb.append(String.format("%s, ", this.blackUsername));
+        else
+            sb.append("null, ");
+        if(this.gameName != null)
+            sb.append(String.format("%s, ", this.gameName));
+        else
+            sb.append("null, ");
+        if(this.game != null)
+            sb.append(String.format("%s]", this.game.toString()));
+        else
+            sb.append("null]");
+        return sb.toString();
+    }
 }
 

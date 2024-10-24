@@ -23,6 +23,18 @@ public class UserDataAccess {
 
     public static void clearUsers() {UserDataAccess.table.clear();}
 
+    public static String dumpTable() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        for(dbobjects.UserData record : table) {
+            sb.append("[");
+            sb.append(record.toString());
+            sb.append("]");
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
     public static void write() {
         throw new RuntimeException("Not implemented");
     }

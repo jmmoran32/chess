@@ -44,6 +44,18 @@ public class GameDataAccess {
             record.joinWhite(user.username());
     }
 
+    public static String dumpTable() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        for(dbobjects.GameData record : table) {
+            sb.append("[");
+            sb.append(record.toString());
+            sb.append("]");
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
     public static void clearGameData() {GameDataAccess.table.clear();}
 
     public static void write() {
