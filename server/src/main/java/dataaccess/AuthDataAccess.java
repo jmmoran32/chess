@@ -45,9 +45,7 @@ public class AuthDataAccess {
         StringBuilder sb = new StringBuilder();
         sb.append("[");
         for(dbobjects.AuthData record : table) {
-            sb.append("[");
             sb.append(record.toString());
-            sb.append("]");
         }
         sb.append("]");
         return sb.toString();

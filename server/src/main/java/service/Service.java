@@ -10,22 +10,21 @@ import java.util.ArrayList;
 public class Service {
     private static int nextGameID = 1;
     public static RegisterResponse registration(RegisterRequest req) throws DataAccessException {
+        if(req.username == null || req.password == null || req.email == null)
+            throw new BadRequestException("Error: bad request");
         dbobjects.UserData user = UserDataAccess.getUser(req.username); 
         if(user != null)
             throw new AlreadyTakenException("Error: already taken");
-        System.out.println("Got past null check");
         String uuid = createAuthData();
         AuthDataAccess.createAuth(uuid, req.username);
-        System.out.println("Got past createAuth");
         UserDataAccess.createUser(req.username, req.password, req.email);
-        System.out.println("Got past createUser");
         return new RegisterResponse(req.username, uuid);
     }
 
     public static LoginResponse login(LoginRequest req) throws DataAccessException {
         dbobjects.UserData user = UserDataAccess.getUser(req.username);
         if(user == null)
-            throw new DataAccessException(String.format("Error: no user with username: %s found", req.username));
+            throw new UnauthorizedException(String.format("Error: no user with username: %s found", req.username));
         if(!user.password().equals(req.password))
             throw new UnauthorizedException("Error: unauthorized");
         String uuid = createAuthData();
@@ -48,9 +47,9 @@ public class Service {
     }
 
     public static LogoutResponse logout(LogoutRequest req) throws DataAccessException {
-        if(!authenticate(req.authtoken))
+        if(!authenticate(req.authToken))
             throw new UnauthorizedException("Error: unauthorized");
-        if(!AuthDataAccess.deleteAuthToken(req.authtoken))
+        if(!AuthDataAccess.deleteAuthToken(req.authToken))
             throw new DataAccessException("Error: Server Error: unable to delete authtoken");
         return new LogoutResponse("");
     }
@@ -58,25 +57,48 @@ public class Service {
    //public ArrayList<dbobjects.GameData> listGames(ListRequest req) {}
 
     public static CreateResponse createGame(CreateRequest req) throws DataAccessException{
-        if(!authenticate(req.authtoken))
+        if(req.authToken == null || req.gameName == null)
+            throw new BadRequestException("Error: bad request");
+        if(!authenticate(req.authToken))
             throw new UnauthorizedException("Error: unauthorized");
         GameDataAccess.newGame(String.format("game%d", nextGameID), nextGameID);
         return new CreateResponse(Integer.toString(nextGameID++));
     }
 
     public static JoinResponse joinGame(JoinRequest req) throws DataAccessException {
-        if(!authenticate(req.authtoken))
+        if(req.authToken == null || req.playerColor == null || req.gameID == null)
+            throw new BadRequestException("Error: bad request");
+        if(!authenticate(req.authToken))
             throw new UnauthorizedException("Error: unauthorized");
-        String username = AuthDataAccess.getUsername(req.authtoken);
+        String username = AuthDataAccess.getUsername(req.authToken);
         dbobjects.UserData user = UserDataAccess.getUser(username);
         if(user == null)
             throw new DataAccessException("Error: User isn't found");
-        chess.ChessGame game = GameDataAccess.getGame(req.gameID);
-        GameDataAccess.joinGame(user, req.color, req.gameID);
+        chess.ChessGame.TeamColor requestColor;
+        dbobjects.GameData gameObject = GameDataAccess.getGameObject(Integer.parseInt(req.gameID));
+        if(req.playerColor.equals("BLACK")) {
+            requestColor = chess.ChessGame.TeamColor.BLACK;
+            if(gameObject.blackUsername() != null)
+                throw new AlreadyTakenException("Error: Black team already taken");
+        }
+        else if(req.playerColor.equals("WHITE")) {
+            requestColor = chess.ChessGame.TeamColor.WHITE;
+            if(gameObject.whiteUsername() != null)
+                throw new AlreadyTakenException("Error: White team already taken");
+        }
+        else
+            throw new BadRequestException("Error: bad request: invalid team color");
+
+        chess.ChessGame game = GameDataAccess.getGame(Integer.parseInt(req.gameID));
+        if(game == null)
+            throw new DataAccessException("Error: Game isn't found");
+        GameDataAccess.joinGame(user, requestColor, Integer.parseInt(req.gameID));
         return new JoinResponse("");
     }
 
     public static ListGameResponse listGames(ListRequest req) throws DataAccessException {
+        if(!authenticate(req.authtoken))
+            throw new UnauthorizedException("Error: unauthorized");
         ListGameResponse response = new ListGameResponse(new ArrayList<ChessGameRecord>());
         ArrayList<dbobjects.GameData> table = GameDataAccess.getGames();
         for(dbobjects.GameData r : table) {
@@ -85,10 +107,10 @@ public class Service {
         return response;
     }
 
-    public static ClearResponse clearApplication(ClearRequest req) throws DataAccessException {
+    public static ClearResponse clearApplication() throws DataAccessException {
         UserDataAccess.clearUsers();
         AuthDataAccess.clearAuth();
         GameDataAccess.clearGameData();
-        return new ClearResponse("");
+        return new ClearResponse();
     }
 }

@@ -18,7 +18,7 @@ public class UserDataAccess {
         for(dbobjects.UserData record : table) 
             if(record.username().equals(username))
                 throw new DataAccessException(String.format("User \"%s\" already exists in UserData as record no %ld", record.username(), record.id()));
-        UserDataAccess.table.add(new dbobjects.UserData(username, password, email));
+        table.add(new dbobjects.UserData(username, password, email));
     }
 
     public static void clearUsers() {UserDataAccess.table.clear();}
@@ -27,9 +27,7 @@ public class UserDataAccess {
         StringBuilder sb = new StringBuilder();
         sb.append("[");
         for(dbobjects.UserData record : table) {
-            sb.append("[");
             sb.append(record.toString());
-            sb.append("]");
         }
         sb.append("]");
         return sb.toString();

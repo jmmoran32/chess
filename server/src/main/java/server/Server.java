@@ -39,6 +39,11 @@ public class Server {
         try {
             register_response = service.Service.registration(r);  
         }
+        catch(BadRequestException e) {
+            ErrorResponse error_response = new ErrorResponse(e.getMessage());
+            res.status(400);
+            return g.toJson(error_response);
+        }
         catch(AlreadyTakenException e) {
             ErrorResponse error_response = new ErrorResponse(e.getMessage());
             res.status(403);
@@ -77,8 +82,8 @@ public class Server {
     private Object logout(spark.Request req, spark.Response res) {
         System.out.println("starting logout");
         Gson g = new Gson();
-        LogoutRequest logout_request = g.fromJson(req.body(), LogoutRequest.class);
-        logout_request.authtoken = req.headers("authorization");
+        //LogoutRequest logout_request = g.fromJson(req.body(), LogoutRequest.class);
+        LogoutRequest logout_request = new LogoutRequest(req.headers("authorization"));
         LogoutResponse logout_response;
         try {
             System.out.println("In try block");
@@ -102,11 +107,15 @@ public class Server {
         Gson g = new Gson();
         CreateRequest create_request = g.fromJson(req.body(), CreateRequest.class);
         //create_request.authtoken = req.headers("authorization");
-        String temp = req.headers("authorization");
-        System.out.println(temp);
+        create_request.authToken = req.headers("authorization");
         CreateResponse create_response;
         try {
             create_response = service.Service.createGame(create_request);
+        }
+        catch(BadRequestException e) {
+            ErrorResponse error_response = new ErrorResponse(e.getMessage());
+            res.status(400);
+            return g.toJson(error_response);
         }
         catch(UnauthorizedException e) {
             ErrorResponse error_response = new ErrorResponse(e.getMessage());
@@ -129,12 +138,16 @@ public class Server {
 
     private Object listGames(spark.Request req, spark.Response res) {
         Gson g = new Gson();
-        ListRequest list_request = g.fromJson(req.body(), ListRequest.class);
-        list_request.authtoken = req.headers("authorization");
+        ListRequest list_request = new ListRequest(req.headers("authorization"));
         ListGameResponse list_response;
         res.type("application/json");
         try {
             list_response = service.Service.listGames(list_request);
+        }
+        catch(UnauthorizedException e) {
+            ErrorResponse error_response = new ErrorResponse(e.getMessage());
+            res.status(401);
+            return g.toJson(error_response);
         }
         catch(AlreadyTakenException e) {
             ErrorResponse error_response = new ErrorResponse(e.getMessage());
@@ -153,14 +166,24 @@ public class Server {
     private Object joinGame(spark.Request req, spark.Response res) {
         Gson g = new Gson();
         JoinRequest join_request = g.fromJson(req.body(), JoinRequest.class);
-        join_request.authtoken = req.headers("authorization");
+        join_request.authToken = req.headers("Authorization");
         JoinResponse join_response;
         try {
             join_response = service.Service.joinGame(join_request);
         }
+        catch(BadRequestException e) {
+            ErrorResponse error_response = new ErrorResponse(e.getMessage());
+            res.status(400);
+            return g.toJson(error_response);
+        }
         catch(UnauthorizedException e) {
             ErrorResponse error_response = new ErrorResponse(e.getMessage());
             res.status(401);
+            return g.toJson(error_response);
+        }
+        catch(AlreadyTakenException e) {
+            ErrorResponse error_response = new ErrorResponse(e.getMessage());
+            res.status(403);
             return g.toJson(error_response);
         }
         catch(Exception e) {
@@ -174,10 +197,10 @@ public class Server {
 
     private Object clearApplication(spark.Request req, spark.Response res) {
         Gson g = new Gson();
-        ClearRequest clear_request = g.fromJson(req.body(), ClearRequest.class);
+        ClearRequest clear_request;
         ClearResponse clear_response;
         try {
-            clear_response = service.Service.clearApplication(clear_request);
+            clear_response = service.Service.clearApplication();
         }
         catch(Exception e) {
             ErrorResponse error_response = new ErrorResponse(e.getMessage());

@@ -3,7 +3,6 @@ package dataaccess;
 import dbobjects.UserData;
 import dbobjects.GameData;
 import chess.ChessGame;
-import chess.ChessGame;
 import java.util.ArrayList;
 
 public class GameDataAccess {
@@ -16,8 +15,7 @@ public class GameDataAccess {
     public static chess.ChessGame getGame(int gameID) throws DataAccessException {
         for(dbobjects.GameData record : table) {
             if(record.gameID() == gameID)
-                throw new DataAccessException(String.format("A game with gameID %d already exists in GameData as record no %ld", record.gameID(), record.id()));
-            return record.game();
+                return record.game();
         }
         return null;
     }
@@ -36,9 +34,9 @@ public class GameDataAccess {
         return null;
     }
 
-    public static void joinGame(dbobjects.UserData user, String color, int gameID) throws DataAccessException {
+    public static void joinGame(dbobjects.UserData user, chess.ChessGame.TeamColor color, int gameID) throws DataAccessException {
         dbobjects.GameData record = GameDataAccess.getGameObject(gameID);
-        if(color.equals("BLACK"))
+        if(color == chess.ChessGame.TeamColor.BLACK)
             record.joinBlack(user.username());
         else
             record.joinWhite(user.username());
@@ -48,9 +46,7 @@ public class GameDataAccess {
         StringBuilder sb = new StringBuilder();
         sb.append("[");
         for(dbobjects.GameData record : table) {
-            sb.append("[");
             sb.append(record.toString());
-            sb.append("]");
         }
         sb.append("]");
         return sb.toString();

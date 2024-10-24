@@ -1,13 +1,13 @@
 package request;
 
 public class JoinRequest {
-    public String authtoken;
-    public String color;
-    public int gameID;
+    public String authToken;
+    public String playerColor;
+    public String gameID;
 
-    public JoinRequest(String t, String c, int g) {
-        this.authtoken = t;
-        this.color = c;
+    public JoinRequest(String t, String c, String g) {
+        this.authToken = t;
+        this.playerColor = c;
         this.gameID = g;
     }
 }
