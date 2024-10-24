@@ -53,8 +53,4 @@ public class GameDataAccess {
     }
 
     public static void clearGameData() {GameDataAccess.table.clear();}
-
-    public static void write() {
-        throw new RuntimeException("Not implemented");
-    }
 }

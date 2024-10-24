@@ -32,8 +32,4 @@ public class UserDataAccess {
         sb.append("]");
         return sb.toString();
     }
-
-    public static void write() {
-        throw new RuntimeException("Not implemented");
-    }
 }

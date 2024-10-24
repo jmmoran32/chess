@@ -54,8 +54,6 @@ public class Service {
         return new LogoutResponse("");
     }
 
-   //public ArrayList<dbobjects.GameData> listGames(ListRequest req) {}
-
     public static CreateResponse createGame(CreateRequest req) throws DataAccessException{
         if(req.authToken == null || req.gameName == null)
             throw new BadRequestException("Error: bad request");

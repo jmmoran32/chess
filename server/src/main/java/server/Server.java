@@ -80,13 +80,10 @@ public class Server {
     }
 
     private Object logout(spark.Request req, spark.Response res) {
-        System.out.println("starting logout");
         Gson g = new Gson();
-        //LogoutRequest logout_request = g.fromJson(req.body(), LogoutRequest.class);
         LogoutRequest logout_request = new LogoutRequest(req.headers("authorization"));
         LogoutResponse logout_response;
         try {
-            System.out.println("In try block");
             logout_response = service.Service.logout(logout_request);
         }
         catch(UnauthorizedException e) {
@@ -106,7 +103,6 @@ public class Server {
     private Object createGame(Request req, Response res) {
         Gson g = new Gson();
         CreateRequest create_request = g.fromJson(req.body(), CreateRequest.class);
-        //create_request.authtoken = req.headers("authorization");
         create_request.authToken = req.headers("authorization");
         CreateResponse create_response;
         try {
