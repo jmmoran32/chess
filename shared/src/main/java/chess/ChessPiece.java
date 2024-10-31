@@ -2,6 +2,7 @@ package chess;
 
 import java.util.Collection;
 import java.util.ArrayList;
+import chess.ChessBoard;
 
 /**
  * Represents a single chess piece
@@ -20,6 +21,37 @@ public class ChessPiece {
         this.color = pieceColor;
         this.type = type;
         this.obid = iterator++;
+    }
+
+    public static ChessPiece serialize(char p) {
+        switch(p) {
+            case('p'):
+                return new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN);
+            case('P'):
+                return new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
+            case('r'):
+                return new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.ROOK);
+            case('R'):
+                return new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.ROOK);
+            case('b'):
+                return new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.BISHOP);
+            case('B'):
+                return new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.BISHOP);
+            case('n'):
+                return new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KNIGHT);
+            case('N'):
+                return new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KNIGHT);
+            case('k'):
+                return new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KING);
+            case('K'):
+                return new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KING);
+            case('q'):
+                return new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.QUEEN);
+            case('Q'):
+                return new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.QUEEN);
+            default:
+                return null;
+        }
     }
 
     /**

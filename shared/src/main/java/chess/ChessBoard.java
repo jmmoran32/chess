@@ -33,6 +33,40 @@ public class ChessBoard {
         this.obid = iterator++;
     }
 
+    public String serialize() {
+        ChessPiece bucket;
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < 8; i++) {
+            for(int j = 0; j < 8; j++) {
+                bucket = this.board[i][j];
+                if(bucket == null) {
+                    sb.append(' ');
+                }
+                else {
+                    sb.append(bucket.getPieceChar());
+                }
+            }
+        }
+        return sb.toString();
+    }
+
+    public static ChessBoard deSerialize(String serial) {
+        ChessBoard board = new ChessBoard();
+        char bucket;
+        for(int i = 0; i < 8; i++) {
+            for(int j = 0; j < 8; j++) {
+                bucket = serial.charAt(i * 8 + j);
+                if(bucket == ' ') {
+                    board.addPiece(i, j, null);
+                }
+                else {
+                    board.addPiece(i, j, ChessPiece.serialize(bucket));
+                }
+            }
+        }
+        return board;
+    }
+
     public ChessPosition kingAt(ChessGame.TeamColor c) {
         for(int i = 0; i < 8; i++)
             for(int j = 0; j < 8; j++) {
@@ -66,6 +100,10 @@ public class ChessBoard {
         int n;
         m = 8 - position.getRow();
         n = position.getColumn() - 1;
+        this.board[m][n] = piece;
+    }
+
+    public void addPiece(int m, int n, ChessPiece piece) {
         this.board[m][n] = piece;
     }
 

@@ -23,6 +23,31 @@ public class ChessGame {
         this.board.resetBoard();
     }
 
+    public String serialize() {
+        StringBuilder sb = new StringBuilder();
+        int whiteTurn;
+        if(this.whiteTurn) {
+            whiteTurn = 1;
+        }
+        else {
+            whiteTurn = 0;
+        }
+        sb.append(String.format("%d{", whiteTurn));
+        sb.append(String.format("%s}", this.board.serialize()));
+        return sb.toString();
+    }
+
+    public static ChessGame deSerialize(String serial) {
+        ChessGame game = new ChessGame();
+        char whiteTurn = serial.charAt(0);
+        if(whiteTurn == '0') {
+            game.setTeamTurn(ChessGame.TeamColor.BLACK);
+        }
+        String boardOnly = serial.substring(2, serial.length() - 2);
+        game.setBoard(ChessBoard.deSerialize(boardOnly));
+        return game;
+    }
+
     /*
     public ChessGame(ChessBoard board) {
         this.obid = iterator++;
