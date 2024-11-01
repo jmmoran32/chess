@@ -5,7 +5,7 @@ import dbobjects.GameData;
 import chess.ChessGame;
 import java.util.ArrayList;
 
-public class GameDataAccess {
+public class GameDataAccess extends SQLDataAccess {
     private static final ArrayList<dbobjects.GameData> table = new ArrayList<dbobjects.GameData>();
 
     public static ArrayList<dbobjects.GameData> getGames() {

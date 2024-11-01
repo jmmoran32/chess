@@ -6,7 +6,7 @@ import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 public abstract class SQLDataAccess {
-    private static final Connection connection;
+    public static final Connection CONN;
 
     static  {
         try {
@@ -16,7 +16,7 @@ public abstract class SQLDataAccess {
             throw new RuntimeException(String.format("Failed to create the database: %s", e.getMessage()));
         }
         try {
-            connection = DBManager.getConnection();
+            CONN = DBManager.getConnection();
         }
         catch(DataAccessException e) {
             throw new RuntimeException(String.format("Failed to create a connection: %s", e.getMessage()));
@@ -31,7 +31,7 @@ public abstract class SQLDataAccess {
         catch(FileNotFoundException e) {
             throw new RuntimeException(String.format("Init file could not be found: %s", e.getMessage()));
         }
-        try(PreparedStatement statement = connection.prepareStatement(initStatement.toString())) {
+        try(PreparedStatement statement = CONN.prepareStatement(initStatement.toString())) {
             statement.executeUpdate();
         }
         catch(SQLException e) {
