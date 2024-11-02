@@ -40,11 +40,11 @@ public class ChessGame {
     public static ChessGame deSerialize(String serial) {
         ChessGame game = new ChessGame();
         char whiteTurn = serial.charAt(0);
+        String boardOnly = serial.substring(2, 66);
+        game.setBoard(ChessBoard.deSerialize(boardOnly));
         if(whiteTurn == '0') {
             game.setTeamTurn(ChessGame.TeamColor.BLACK);
         }
-        String boardOnly = serial.substring(2, serial.length() - 2);
-        game.setBoard(ChessBoard.deSerialize(boardOnly));
         return game;
     }
 
@@ -244,7 +244,6 @@ public class ChessGame {
      */
     public void setBoard(ChessBoard board) {
         this.board = board;
-        //TODO how do I restore turn from a loaded board?
         this.whiteTurn = true; 
     }
 

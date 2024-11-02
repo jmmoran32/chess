@@ -26,7 +26,7 @@ public class UserDataAccess extends SQLDataAccess {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT USERNAME, PASS_HASH, EMAIL\n");
         sb.append("FROM USER_DATA\n");
-        sb.append("WHERE USERNAME = \'?\';");
+        sb.append("WHERE USERNAME = ?;");
         try(PreparedStatement getStatement = CONN.prepareStatement(sb.toString())) {
             getStatement.setString(1, username);
             ResultSet result = getStatement.executeQuery();
@@ -56,12 +56,12 @@ public class UserDataAccess extends SQLDataAccess {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT USERNAME\n");
         sb.append("FROM USER_DATA\n");
-        sb.append("WHERE USERNAME = \'?\';");
+        sb.append("WHERE USERNAME = ?;");
         try(PreparedStatement getStatement = CONN.prepareStatement(sb.toString())) {
             getStatement.setString(1, username);
             ResultSet result = getStatement.executeQuery();
             if(result.next()) {
-                throw new DataAccessException(String.format("User \"%s\" already exists in USER_DATA", username));
+                throw new AlreadyTakenException(String.format("User \"%s\" already exists in USER_DATA", username));
             }
         }
         catch(SQLException e) {
@@ -71,7 +71,7 @@ public class UserDataAccess extends SQLDataAccess {
         sb = new StringBuilder();
         sb.append("INSERT INTO USER_DATA ");
         sb.append("(USERNAME, PASS_HASH, EMAIL)\n");
-        sb.append("VALUES (\'?\', \'?\', \'?\');");
+        sb.append("VALUES (?, ?, ?);");
         try(PreparedStatement createStatement = CONN.prepareStatement(sb.toString())) {
             createStatement.setString(1, username);
             createStatement.setString(2, hash);

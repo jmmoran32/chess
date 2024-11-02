@@ -2,11 +2,16 @@ package dataaccess;
 
 import dbobjects.UserData;
 import dbobjects.GameData;
-import chess.ChessGame;
+import chess.*;
 import java.util.ArrayList;
+import java.sql.*;
 
 public class GameDataAccess extends SQLDataAccess {
     private static final ArrayList<dbobjects.GameData> table = new ArrayList<dbobjects.GameData>();
+
+    static {
+        loadTable();
+    }
 
     public static ArrayList<dbobjects.GameData> getGames() {
         return table;
@@ -50,6 +55,23 @@ public class GameDataAccess extends SQLDataAccess {
         }
         sb.append("]");
         return sb.toString();
+    }
+
+    private static void loadTable() {
+        ResultSet result;
+        String getString = "SELECT * FROM GAME_DATA";
+        try(PreparedStatement selectStatement = CONN.prepareStatement(getString)) {
+            result = selectStatement.executeQuery();
+            ChessGame game;
+            while(result.next()) {
+                String gameString = result.getString(4);
+                game = chess.ChessGame.deSerialize(gameString);
+                table.add(new dbobjects.GameData(result.getInt(0), result.getString(1), game));
+            }
+        }
+        catch(SQLException e) {
+            throw new RuntimeException("There was a problem loading the memory implementation of USER_DATA: " + e.getMessage());
+        }
     }
 
     public static void clearGameData() {GameDataAccess.table.clear();}

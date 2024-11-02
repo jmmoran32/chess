@@ -35,6 +35,8 @@ public class DBManager {
     /**
      * Creates the database if it does not already exist.
      */
+
+    /*
     static void createDatabase() throws DataAccessException {
         try {
             var statement = "CREATE DATABASE IF NOT EXISTS " + DB_NAME;
@@ -46,6 +48,7 @@ public class DBManager {
             throw new DataAccessException (e.getMessage());
         }
     }
+    */
 
     /**
      * Create a connection to the database and sets the catalog based upon the
