@@ -9,14 +9,13 @@ public abstract class SQLDataAccess {
     public static final Connection CONN;
 
     static  {
-        /*
         try {
             DBManager.createDatabase();
         }
         catch(DataAccessException e) {
             throw new RuntimeException(String.format("Failed to create the database: %s", e.getMessage()));
         }
-        */
+
         try {
             CONN = DBManager.getConnection();
         }
@@ -42,9 +41,6 @@ public abstract class SQLDataAccess {
         }
         */
         StringBuilder sb = new StringBuilder();
-        sb.append("CREATE DATABASE IF NOT EXISTS chess;");
-        executePreparedStatement(sb.toString());
-        sb = new StringBuilder();
         sb.append("USE chess;");
         executePreparedStatement(sb.toString());
 
@@ -60,12 +56,13 @@ public abstract class SQLDataAccess {
 
         sb = new StringBuilder();
         sb.append("CREATE TABLE IF NOT EXISTS GAME_DATA ");
-        sb.append("(GAME_ID INT NOT NULL AUTO_INCREMENT, ");
+        sb.append("(ID INT NOT NULL AUTO_INCREMENT, ");
+        sb.append("GAME_ID INT NOT NULL, ");
         sb.append("WHITE_USERNAME VARCHAR(255), ");
         sb.append("BLACK_USERNAME VARCHAR(255), ");
         sb.append("GAME_NAME VARCHAR(255) NOT NULL, ");
         sb.append("GAME VARCHAR(255) NOT NULL, ");
-        sb.append("PRIMARY KEY (GAME_ID), ");
+        sb.append("PRIMARY KEY (ID), ");
         sb.append ("INDEX (GAME_ID));");
         executePreparedStatement(sb.toString());
 
@@ -87,4 +84,24 @@ public abstract class SQLDataAccess {
             throw new RuntimeException(String.format("There was a problem executing init: %s", e.getMessage()));
         }
     }
+
+    public static void executeUpdateStatement(String updateString) throws SQLException {
+        try(PreparedStatement updateStatement = CONN.prepareStatement(updateString)) {
+            updateStatement.executeUpdate();
+        }
+        catch(SQLException e) {
+            throw new SQLException("There was a problem running an update statement: " + e.getMessage());
+        }
+    }
+
+    /*
+    public static ResultSet executeQueryStatement(String queryString) throws SQLException {
+        try(PreparedStatement queryStatement = CONN.prepareStatement(queryString)) {
+            return queryStatement.executeQuery();
+        }
+        catch(SQLException e) {
+            throw new SQLException("There was a problem getting a query statement: " + e.getMessage());
+        }
+    }
+    */
 }

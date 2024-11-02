@@ -45,6 +45,22 @@ public class DataAccessTests {
         catch(Exception e) {
             throw new Exception("Unable to clearDB after a test: " + e.getMessage());
         }
+        
+        truncate = "TRUNCATE TABLE GAME_DATA";
+        try(PreparedStatement statement = SQLDataAccess.CONN.prepareStatement(truncate)) {
+            statement.executeUpdate();
+        }
+        catch(Exception e) {
+            throw new Exception("Unable to clearDB after a test: " + e.getMessage());
+        }
+
+        truncate = "TRUNCATE TABLE AUTH_DATA";
+        try(PreparedStatement statement = SQLDataAccess.CONN.prepareStatement(truncate)) {
+            statement.executeUpdate();
+        }
+        catch(Exception e) {
+            throw new Exception("Unable to clearDB after a test: " + e.getMessage());
+        }
     }
 
     @Test
@@ -111,6 +127,38 @@ public class DataAccessTests {
     public void deSerializeGame() throws Exception {
         ChessGame deSerial = ChessGame.deSerialize(defaultSerial);
         Assertions.assertEquals(game.getBoard(), deSerial.getBoard());
+    }
+
+    @Test
+    @DisplayName("Create Game Good")
+    public void createGameGood() throws Exception {
+        GameDataAccess.newGame("A New Game", 1);
+        Assertions.assertEquals(1, numRows("GAME_DATA"));
+    }
+
+    @Test
+    @DisplayName("Create Game Duplicate")
+    public void createGameDuplicate() throws Exception {
+        GameDataAccess.newGame("A New Game", 1);
+        try {
+            GameDataAccess.newGame("Duplicate Game", 1);
+        }
+        catch(AlreadyTakenException e) {
+            Assertions.assertTrue(true);
+        }
+        catch(Exception e) {
+            Assertions.fail("Expected AlreadyTakenException, but got: " + e.getMessage());
+        }
+    }
+
+    @Test
+    @DisplayName("Get Game Good")
+    public void getGameGood() throws Exception {
+        GameDataAccess.newGame("A New Game", 1);
+        GameDataAccess.newGame("Another New Game", 2);
+        GameDataAccess.newGame("Yet Another New Game", 3);
+        ChessGame returned = GameDataAccess.getGame(2);
+        Assertions.assertEquals(game.getBoard(), returned.getBoard());
     }
 
     private int numRows(String tableName) throws Exception  {

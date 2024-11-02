@@ -6,6 +6,7 @@ import dataaccess.*;
 import java.util.UUID;
 import dbobjects.*;
 import java.util.ArrayList;
+import java.sql.SQLException;
 
 public class Service {
     private static int nextGameID = 1;
@@ -54,7 +55,7 @@ public class Service {
         return new LogoutResponse("");
     }
 
-    public static CreateResponse createGame(CreateRequest req) throws DataAccessException{
+    public static CreateResponse createGame(CreateRequest req) throws DataAccessException, SQLException {
         if(req.authToken == null || req.gameName == null)
             throw new BadRequestException("Error: bad request");
         if(!authenticate(req.authToken))
@@ -63,7 +64,7 @@ public class Service {
         return new CreateResponse(Integer.toString(nextGameID++));
     }
 
-    public static JoinResponse joinGame(JoinRequest req) throws DataAccessException {
+    public static JoinResponse joinGame(JoinRequest req) throws DataAccessException, SQLException {
         if(req.authToken == null || req.playerColor == null || req.gameID == null)
             throw new BadRequestException("Error: bad request");
         if(!authenticate(req.authToken))
