@@ -40,8 +40,9 @@ public abstract class SQLDataAccess {
             throw new RuntimeException(String.format("There was a problem executing init: %s", e.getMessage()));
         }
         */
+
         StringBuilder sb = new StringBuilder();
-        sb.append("USE chess;");
+        sb.append("USE " + DatabaseManager.getDBName() + ";");
         executePreparedStatement(sb.toString());
 
         sb = new StringBuilder();
