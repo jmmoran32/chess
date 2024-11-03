@@ -43,7 +43,7 @@ public class UserDataAccess extends SQLDataAccess {
         try(PreparedStatement getStatement = CONN.prepareStatement(sb.toString())) {
             ResultSet result = getStatement.executeQuery();
             if(result.isBeforeFirst()) {
-                throw new AlreadyTakenException(String.format("User %s already exists in USER_DATA", username));
+                throw new AlreadyTakenException("Error: already taken");
             }
         }
         catch(SQLException e) {
