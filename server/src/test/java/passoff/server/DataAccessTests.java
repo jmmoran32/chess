@@ -161,6 +161,16 @@ public class DataAccessTests {
         Assertions.assertEquals(game.getBoard(), returned.getBoard());
     }
 
+    @Test
+    @DisplayName("Get Game Not Exists")
+    public void getGameNotExists() throws Exception {
+        GameDataAccess.newGame("A New Game", 1);
+        GameDataAccess.newGame("Another New Game", 2);
+        GameDataAccess.newGame("Yet Another New Game", 3);
+        ChessGame returned = GameDataAccess.getGame(5);
+        Assertions.assertNull(returned);
+    }
+
     private int numRows(String tableName) throws Exception  {
         int numRows = -1;
         StringBuilder sb = new StringBuilder();
@@ -179,6 +189,7 @@ public class DataAccessTests {
         }
         return numRows;
     }
+
 
     private boolean findGoodUser() throws Exception {
         StringBuilder sb = new StringBuilder();

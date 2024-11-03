@@ -50,6 +50,9 @@ public class GameDataAccess extends SQLDataAccess {
 
     public static chess.ChessGame getGame(int gameID) throws SQLException {
         GameData game = getGameObject(gameID);
+        if(game == null) {
+            return null;
+        }
         return game.game();
     }
 
@@ -72,6 +75,10 @@ public class GameDataAccess extends SQLDataAccess {
 
         try(PreparedStatement queryStatement = CONN.prepareStatement(sb.toString())) {
             ResultSet result = queryStatement.executeQuery();
+
+            if(!result.isBeforeFirst()) {
+                return null;
+            }
 
             result.next();
 
@@ -116,43 +123,67 @@ public class GameDataAccess extends SQLDataAccess {
     }
     */
 
-    public static void newGame(String gameName, int gameID) throws DataAccessException, SQLException {
+    public static int newGame(String gameName) throws DataAccessException, SQLException {
         StringBuilder sb = new StringBuilder();
         ChessGame game = new ChessGame();
-        int row = 0;
-        ResultSet result;
+        int gameID;
 
-        sb.append("SELECT GAME_ID FROM GAME_DATA ");
-        sb.append(String.format("WHERE GAME_ID = %d", gameID));
-        try(PreparedStatement queryStatement = CONN.prepareStatement(sb.toString())) {
-            result = queryStatement.executeQuery();
-            while(result.next()) {
-                row++;
-            }
-            if(row > 0) {
-                throw new AlreadyTakenException(String.format("A game with gameID %d already exists in GAME_DATA", gameID));
-            }
-        }
-        catch(SQLException e) {
-            throw new SQLException("There was a problem getting a query statement: " + e.getMessage());
-        }
-
-        
         sb = new StringBuilder();
         sb.append("INSERT INTO GAME_DATA\n");
-        sb.append("(GAME_ID, GAME_NAME, GAME)\n");
-        sb.append(String.format("VALUES (%d, '%s', '%s');", gameID, gameName, game.serialize()));
+        sb.append("(GAME_NAME, GAME)\n");
+        //sb.append(String.format("VALUES ('%s', '%s');", gameName, game.serialize()));
+        sb.append("VALUES (?, ?);");
 
-        executeUpdateStatement(sb.toString()); 
+        try(PreparedStatement update = CONN.prepareStatement(sb.toString())) {
+            update.setString(1, gameName);
+            update.setString(2, game.serialize());
+            update.executeUpdate();
+        }
+        catch(SQLException e) {
+            throw new SQLException("There was a problem addint the new game: " + e.getMessage());
+        }
+
+
+        String lastID = "SELECT LAST_INSERT_ID();";
+        try(PreparedStatement query = CONN.prepareStatement(lastID)) {
+            ResultSet result = query.executeQuery();
+            result.next();
+            gameID = result.getInt(1);
+        }
+        catch(SQLException e) {
+            throw new SQLException("There was a problem getting the ID of the last game inserted: " + e.getMessage());
+        }
+        table.add(new GameData(gameID, gameName, game));
+        return gameID;
     }
 
 
+    /*
     public static void joinGame(dbobjects.UserData user, chess.ChessGame.TeamColor color, int gameID) throws SQLException {
         dbobjects.GameData record = GameDataAccess.getGameObject(gameID);
         if(color == chess.ChessGame.TeamColor.BLACK)
             record.joinBlack(user.username());
         else
             record.joinWhite(user.username());
+    }
+    */
+
+    public static void joinGame(dbobjects.UserData user, chess.ChessGame.TeamColor color, int gameID) throws SQLException {
+        dbobjects.GameData record = GameDataAccess.getGameObject(gameID);
+        StringBuilder sb = new StringBuilder();
+        sb.append("UPDATE GAME_DATA\n");
+
+        if(color == chess.ChessGame.TeamColor.BLACK){
+            record.joinBlack(user.username());
+            sb.append(String.format("SET BLACK_USERNAME = '%s'", user.username()));
+        }
+        else {
+            record.joinWhite(user.username());
+            sb.append(String.format("SET WHITE_USERNAME = '%s'", user.username()));
+        }
+        sb.append("\nWHERE GAME_ID = " + gameID + ";");
+
+        executeUpdateStatement(sb.toString());
     }
 
     public static String dumpTable() {
@@ -183,5 +214,9 @@ public class GameDataAccess extends SQLDataAccess {
     }
 
 
-    public static void clearGameData() {GameDataAccess.table.clear();}
+    public static void clearGameData() throws SQLException {
+        GameDataAccess.table.clear();
+        String truncateStatement = "TRUNCATE GAME_DATA;";
+        executeUpdateStatement(truncateStatement);
+    }
 }

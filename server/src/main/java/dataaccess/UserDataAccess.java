@@ -8,20 +8,6 @@ import org.mindrot.jbcrypt.BCrypt;
 public class UserDataAccess extends SQLDataAccess {
     private static final ArrayList<dbobjects.UserData> table = new ArrayList<dbobjects.UserData>();
 
-    static {
-        loadTable();
-    }
-
-    /*
-    public static dbobjects.UserData getUser(String username) {
-        for(dbobjects.UserData record : table) {
-            if(record.username().equals(username))
-                return record;
-        }
-        return null;
-    }
-    */
-
     public static dbobjects.UserData getUser(String username) throws DataAccessException {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT USERNAME, PASS_HASH, EMAIL\n");
@@ -30,7 +16,12 @@ public class UserDataAccess extends SQLDataAccess {
         try(PreparedStatement getStatement = CONN.prepareStatement(sb.toString())) {
             getStatement.setString(1, username);
             ResultSet result = getStatement.executeQuery();
-            if(!result.next()) {
+
+            if(!result.isBeforeFirst()) {
+                return null;
+            }
+
+            if(result.next()) {
                 dbobjects.UserData user = new dbobjects.UserData(result.getString(1), result.getString(2), result.getString(3));
                 table.add(user);
                 return user;
@@ -39,29 +30,20 @@ public class UserDataAccess extends SQLDataAccess {
         catch(SQLException e) {
             throw new SQLDataAccessException(String.format("There was a problem querying for %s in USER_DATA: " + username));
         }
-        throw null;
+        return null;
     }
-
-    /*
-    public static void createUser(String username, String password, String email) throws DataAccessException {
-        for(dbobjects.UserData record : table) 
-            if(record.username().equals(username))
-                throw new DataAccessException(String.format("User \"%s\" already exists in UserData as record no %ld", record.username(), record.id()));
-        table.add(new dbobjects.UserData(username, password, email));
-    }
-    */
 
     public static void createUser(String username, String password, String email) throws DataAccessException {
         String hash = hashPass(password);
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT USERNAME\n");
         sb.append("FROM USER_DATA\n");
-        sb.append("WHERE USERNAME = ?;");
+        sb.append("WHERE USERNAME = '" + username + "';");
+
         try(PreparedStatement getStatement = CONN.prepareStatement(sb.toString())) {
-            getStatement.setString(1, username);
             ResultSet result = getStatement.executeQuery();
-            if(result.next()) {
-                throw new AlreadyTakenException(String.format("User \"%s\" already exists in USER_DATA", username));
+            if(result.isBeforeFirst()) {
+                throw new AlreadyTakenException(String.format("User %s already exists in USER_DATA", username));
             }
         }
         catch(SQLException e) {
@@ -123,7 +105,7 @@ public class UserDataAccess extends SQLDataAccess {
         return BCrypt.hashpw(pass.toString(), BCrypt.gensalt(7));
     }
 
-    private static boolean checkPass(String pass, String hash) {
+    public static boolean checkPass(String pass, String hash) {
         return BCrypt.checkpw(pass, hash);
     }
 }

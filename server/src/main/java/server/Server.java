@@ -32,12 +32,11 @@ public class Server {
     }
 
     private Object registration(spark.Request req, spark.Response res) {
-        //use Spark.halt for error codes. Will send errors back to client. Have it in a catch block for your own exceptions.
         Gson g = new Gson();
-        RegisterRequest r = g.fromJson(req.body(), RegisterRequest.class);
+        RegisterRequest registerRequest = g.fromJson(req.body(), RegisterRequest.class);
         RegisterResponse register_response;
         try {
-            register_response = service.Service.registration(r);  
+            register_response = service.Service.registration(registerRequest);  
         }
         catch(BadRequestException e) {
             ErrorResponse error_response = new ErrorResponse(e.getMessage());

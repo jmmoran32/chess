@@ -56,13 +56,12 @@ public abstract class SQLDataAccess {
 
         sb = new StringBuilder();
         sb.append("CREATE TABLE IF NOT EXISTS GAME_DATA ");
-        sb.append("(ID INT NOT NULL AUTO_INCREMENT, ");
-        sb.append("GAME_ID INT NOT NULL, ");
+        sb.append("(GAME_ID INT NOT NULL AUTO_INCREMENT, ");
         sb.append("WHITE_USERNAME VARCHAR(255), ");
         sb.append("BLACK_USERNAME VARCHAR(255), ");
         sb.append("GAME_NAME VARCHAR(255) NOT NULL, ");
         sb.append("GAME VARCHAR(255) NOT NULL, ");
-        sb.append("PRIMARY KEY (ID), ");
+        sb.append("PRIMARY KEY (GAME_ID), ");
         sb.append ("INDEX (GAME_ID));");
         executePreparedStatement(sb.toString());
 
@@ -94,14 +93,16 @@ public abstract class SQLDataAccess {
         }
     }
 
-    /*
-    public static ResultSet executeQueryStatement(String queryString) throws SQLException {
+    public static boolean checkIfExists(String queryString) throws SQLException {
         try(PreparedStatement queryStatement = CONN.prepareStatement(queryString)) {
-            return queryStatement.executeQuery();
+            ResultSet result = queryStatement.executeQuery();
+            if(!result.isBeforeFirst()) {
+                return false;
+            }
+            return true;
         }
         catch(SQLException e) {
             throw new SQLException("There was a problem getting a query statement: " + e.getMessage());
         }
     }
-    */
 }

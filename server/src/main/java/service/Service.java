@@ -9,25 +9,29 @@ import java.util.ArrayList;
 import java.sql.SQLException;
 
 public class Service {
-    private static int nextGameID = 1;
-    public static RegisterResponse registration(RegisterRequest req) throws DataAccessException {
-        if(req.username == null || req.password == null || req.email == null)
+    private static int nextGameID;
+
+    static {
+        nextGameID = 1;
+    }
+    public static RegisterResponse registration(RegisterRequest req) throws DataAccessException, SQLException {
+        if(req.username == null || req.password == null || req.email == null) {
             throw new BadRequestException("Error: bad request");
-        dbobjects.UserData user = UserDataAccess.getUser(req.username); 
-        if(user != null)
-            throw new AlreadyTakenException("Error: already taken");
+        }
         String uuid = createAuthData();
-        AuthDataAccess.createAuth(uuid, req.username);
         UserDataAccess.createUser(req.username, req.password, req.email);
+        AuthDataAccess.createAuth(uuid, req.username);
         return new RegisterResponse(req.username, uuid);
     }
 
-    public static LoginResponse login(LoginRequest req) throws DataAccessException {
+    public static LoginResponse login(LoginRequest req) throws DataAccessException, SQLException {
         dbobjects.UserData user = UserDataAccess.getUser(req.username);
-        if(user == null)
+        if(user == null) {
             throw new UnauthorizedException(String.format("Error: no user with username: %s found", req.username));
-        if(!user.password().equals(req.password))
+        }
+        if(!UserDataAccess.checkPass(req.password, user.password())) {
             throw new UnauthorizedException("Error: unauthorized");
+        }
         String uuid = createAuthData();
         AuthDataAccess.createAuth(uuid, user.username());
         return new LoginResponse(req.username, uuid);
@@ -39,7 +43,7 @@ public class Service {
 
     //private static boolean matchHash(String password, long hash) {}
 
-    private static boolean authenticate(String token) {
+    private static boolean authenticate(String token) throws SQLException {
         String auth = AuthDataAccess.getAuthToken(token);
         if(auth == null)
             return false;
@@ -47,21 +51,24 @@ public class Service {
             return true;
     }
 
-    public static LogoutResponse logout(LogoutRequest req) throws DataAccessException {
-        if(!authenticate(req.authToken))
+    public static LogoutResponse logout(LogoutRequest req) throws DataAccessException, SQLException {
+        if(!authenticate(req.authToken)) {
             throw new UnauthorizedException("Error: unauthorized");
-        if(!AuthDataAccess.deleteAuthToken(req.authToken))
+        }
+        if(!AuthDataAccess.deleteAuthToken(req.authToken)) {
             throw new DataAccessException("Error: Server Error: unable to delete authtoken");
+        }
         return new LogoutResponse("");
     }
 
     public static CreateResponse createGame(CreateRequest req) throws DataAccessException, SQLException {
+        int gameID;
         if(req.authToken == null || req.gameName == null)
             throw new BadRequestException("Error: bad request");
         if(!authenticate(req.authToken))
             throw new UnauthorizedException("Error: unauthorized");
-        GameDataAccess.newGame(String.format("game%d", nextGameID), nextGameID);
-        return new CreateResponse(Integer.toString(nextGameID++));
+        gameID = GameDataAccess.newGame(req.gameName);
+        return new CreateResponse(Integer.toString(gameID));
     }
 
     public static JoinResponse joinGame(JoinRequest req) throws DataAccessException, SQLException {
@@ -95,18 +102,18 @@ public class Service {
         return new JoinResponse("");
     }
 
-    public static ListGameResponse listGames(ListRequest req) throws DataAccessException {
+    public static ListGameResponse listGames(ListRequest req) throws DataAccessException, SQLException {
         if(!authenticate(req.authtoken))
             throw new UnauthorizedException("Error: unauthorized");
         ListGameResponse response = new ListGameResponse(new ArrayList<ChessGameRecord>());
         ArrayList<dbobjects.GameData> table = GameDataAccess.getGames();
         for(dbobjects.GameData r : table) {
-            response.games().add(new ChessGameRecord(Integer.toString(r.gameID()), r.whiteUsername(), r.blackUsername(), r.game()));
+            response.games().add(new ChessGameRecord(Integer.toString(r.gameID()), r.whiteUsername(), r.blackUsername(), r.gameName(), r.game()));
         }
         return response;
     }
 
-    public static ClearResponse clearApplication() throws DataAccessException {
+    public static ClearResponse clearApplication() throws DataAccessException, SQLException {
         UserDataAccess.clearUsers();
         AuthDataAccess.clearAuth();
         GameDataAccess.clearGameData();
