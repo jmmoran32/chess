@@ -132,16 +132,16 @@ public class DataAccessTests {
     @Test
     @DisplayName("Create Game Good")
     public void createGameGood() throws Exception {
-        GameDataAccess.newGame("A New Game", 1);
+        GameDataAccess.newGame("A New Game");
         Assertions.assertEquals(1, numRows("GAME_DATA"));
     }
 
     @Test
     @DisplayName("Create Game Duplicate")
     public void createGameDuplicate() throws Exception {
-        GameDataAccess.newGame("A New Game", 1);
+        GameDataAccess.newGame("A New Game");
         try {
-            GameDataAccess.newGame("Duplicate Game", 1);
+            GameDataAccess.newGame("Duplicate Game");
         }
         catch(AlreadyTakenException e) {
             Assertions.assertTrue(true);
@@ -154,9 +154,9 @@ public class DataAccessTests {
     @Test
     @DisplayName("Get Game Good")
     public void getGameGood() throws Exception {
-        GameDataAccess.newGame("A New Game", 1);
-        GameDataAccess.newGame("Another New Game", 2);
-        GameDataAccess.newGame("Yet Another New Game", 3);
+        GameDataAccess.newGame("A New Game");
+        GameDataAccess.newGame("Another New Game");
+        GameDataAccess.newGame("Yet Another New Game");
         ChessGame returned = GameDataAccess.getGame(2);
         Assertions.assertEquals(game.getBoard(), returned.getBoard());
     }
@@ -164,9 +164,9 @@ public class DataAccessTests {
     @Test
     @DisplayName("Get Game Not Exists")
     public void getGameNotExists() throws Exception {
-        GameDataAccess.newGame("A New Game", 1);
-        GameDataAccess.newGame("Another New Game", 2);
-        GameDataAccess.newGame("Yet Another New Game", 3);
+        GameDataAccess.newGame("A New Game");
+        GameDataAccess.newGame("Another New Game");
+        GameDataAccess.newGame("Yet Another New Game");
         ChessGame returned = GameDataAccess.getGame(5);
         Assertions.assertNull(returned);
     }
