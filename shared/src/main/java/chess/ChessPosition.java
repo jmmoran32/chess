@@ -12,7 +12,7 @@ public class ChessPosition {
     int col;
     private static int iterator = 1;
     private int obid;
-    private static final int clid = 11;
+    private static final int CLID = 11;
 
     public ChessPosition(int row, int col) {
         this.row =  row;
@@ -23,19 +23,17 @@ public class ChessPosition {
     @Override
     public boolean equals(Object ob) {
         ChessPosition op = (ChessPosition) ob;
-        if(this.row != op.getRow()) return false;
-        if(this.col != op.getColumn()) return false;
+        if(this.row != op.getRow()) {
+            return false;
+        }
+        if(this.col != op.getColumn()) {
+            return false;
+        }
         return true;
     }
 
     @Override
     public int hashCode() {
-        /*int hash = obid;
-        int factor = 79;
-        hash = factor * hash + Integer.hashCode(this.row);
-        hash = factor * hash + Integer.hashCode(this.col);
-        return hash;
-        */
         return Objects.hash(this.row, this.col);
     }
 

@@ -22,7 +22,7 @@ public class ChessBoard {
     private byte bbn;
     private static int iterator = 1;
     private int obid;
-    private static final int clid = 1;
+    private static final int CLID = 1;
 
     public ChessBoard() {
         this.board = new ChessPiece[8][8];
@@ -68,26 +68,20 @@ public class ChessBoard {
     }
 
     public ChessPosition kingAt(ChessGame.TeamColor c) {
-        for(int i = 0; i < 8; i++)
+        for(int i = 0; i < 8; i++) {
             for(int j = 0; j < 8; j++) {
-                if(this.board[i][j] == null)
+                if(this.board[i][j] == null) {
                     continue;
+                }
                 if(this.board[i][j].getPieceType() == ChessPiece.PieceType.KING && this.board[i][j].getTeamColor() == c) {
                     ChessPosition kingAt = new ChessPosition(8 - i, j + 1);
                     return kingAt;
                 }
             }
+        }
         return null;
     }
 
-    public Collection<ChessPiece> getTeam(ChessGame.TeamColor c) {
-        ArrayList<ChessPiece> pieces = new ArrayList<ChessPiece>();
-        for(int i = 0; i < 8; i++)
-            for(int j = 0; j < 8; j++)
-                if(this.board[i][j].getTeamColor() == c)
-                    pieces.add(this.board[i][j]);
-        return pieces;
-    }
 
     /**
      * Adds a chess piece to the chessboard
@@ -147,44 +141,10 @@ public class ChessBoard {
         this.board[7][5] = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.BISHOP);
         this.board[7][6] = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KNIGHT);
         this.board[7][7] = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.ROOK);
-        for(byte i = 0; i < 8; i++) this.board[1][i] = new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN);
-        for(byte i = 0; i < 8; i++) this.board[6][i] = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
+        for(byte i = 0; i < 8; i++) {this.board[1][i] = new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN);}
+        for(byte i = 0; i < 8; i++) {this.board[6][i] = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);}
     }
 
-    /**
-     * places a piece in a box
-     */
-    public void boxPiece(ChessPosition position) {
-        int m = position.getRow() - 1;
-        int n = position.getColumn() - 1;
-        if(this.board[m][n] == null) {
-            return; 
-        }
-
-        ChessPiece p = this.board[m][n];
-        if(p.getTeamColor() == ChessGame.TeamColor.WHITE) {
-           this.whiteBox[wbn++] = p; 
-        }
-        else if(p.getTeamColor() == ChessGame.TeamColor.BLACK) {
-           this.blackBox[bbn++] = p; 
-        }
-        this.board[m][n] = null;
-
-        return;
-    }
-
-    /**
-     * clears the entire board, and the boxes
-     */
-    private void clearBoard() {
-        for(byte i = 0; i < 8; i++) {
-            for(byte j = 0; j < 8; j++) {
-                this.board[i][j] = null;
-            }
-        }
-        for(byte i = 0; i < 64; i++) this.whiteBox[i] = null;
-        for(byte i = 0; i < 64; i++) this.blackBox[i] = null;
-    }
 
     @Override
     public int hashCode() {return Arrays.deepHashCode(this.board);}
@@ -193,15 +153,16 @@ public class ChessBoard {
     public boolean equals(Object ob) {
         ChessBoard op = (ChessBoard) ob;
         ChessPiece bucket;
-        for(int i = 0; i < 8; i++) 
+        for(int i = 0; i < 8; i++) {
            for(int j = 0; j < 8; j++) { 
                 bucket = op.getPiece(i, j);
                 if(bucket == null) {
-                    if(this.board[i][j] != null) return false;
+                    if(this.board[i][j] != null) {return false;}
                     continue;
                 }
-                if(!bucket.equals(this.board[i][j])) return false;
+                if(!bucket.equals(this.board[i][j])) {return false;}
            }
+        }
        return true;
     }
 
@@ -213,8 +174,8 @@ public class ChessBoard {
             sb.append('|');
             for(int j = 0; j < 8; j++) {
                p = this.board[i][j];
-               if(p == null) sb.append(" |");
-               else sb.append(String.format("%c|", p.getPieceChar()));
+               if(p == null) {sb.append(" |");}
+               else {sb.append(String.format("%c|", p.getPieceChar()));}
             }
             sb.append('\n');
         }
