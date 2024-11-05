@@ -107,6 +107,7 @@ public class GameDataAccess extends SQLDataAccess {
         String lastID = "SELECT LAST_INSERT_ID();";
         try(PreparedStatement query = CONN.prepareStatement(lastID)) {
             ResultSet result = query.executeQuery();
+            
             result.next();
             gameID = result.getInt(1);
         }
@@ -126,15 +127,21 @@ public class GameDataAccess extends SQLDataAccess {
 
         if(color == chess.ChessGame.TeamColor.BLACK){
             record.joinBlack(user.username());
-            sb.append(String.format("SET BLACK_USERNAME = '%s'", user.username()));
+            sb.append("SET BLACK_USERNAME = ?");
         }
         else {
             record.joinWhite(user.username());
-            sb.append(String.format("SET WHITE_USERNAME = '%s'", user.username()));
+            sb.append("SET WHITE_USERNAME = ?");
         }
         sb.append("\nWHERE GAME_ID = " + gameID + ";");
 
-        executeUpdateStatement(sb.toString());
+        try(PreparedStatement updateStatement = CONN.prepareStatement(sb.toString())) {
+            updateStatement.setString(1, user.username());
+            updateStatement.executeUpdate();
+        }
+        catch(SQLException e) {
+            throw new SQLException("There was a problem joining a user to game: " + e.getMessage());
+        }
     }
 
     private static void loadTable() {

@@ -19,9 +19,16 @@ public class AuthDataAccess extends SQLDataAccess {
         sb = new StringBuilder();
         sb.append("INSERT INTO AUTH_DATA\n");
         sb.append("(AUTH_TOKEN, USERNAME)\n");
-        sb.append(String.format("VALUES ('%s', '%s');", authToken, username));
+        sb.append("VALUES (?, ?);");
 
-        executeUpdateStatement(sb.toString());
+        try(PreparedStatement statement = CONN.prepareStatement(sb.toString())) {
+            statement.setString(1, authToken);
+            statement.setString(2, username);
+            statement.executeUpdate();
+        }
+        catch(SQLException e) {
+            throw new SQLException("There was a problem creating a new Auth: " + e.getMessage());
+        }
     }
 
     public static String getAuthToken(String authToken) throws SQLException {
@@ -34,7 +41,7 @@ public class AuthDataAccess extends SQLDataAccess {
 
     public static String getUsername(String authToken) throws SQLException, DataAccessException {
         if(getAuthToken(authToken) == null) {
-            throw new DataAccessException(String.format("User not found matching authtoken %s"));
+            return null;
         }
 
         String queryString = "SELECT USERNAME FROM AUTH_DATA WHERE AUTH_TOKEN = '" + authToken + "';";

@@ -6,7 +6,7 @@ import dataaccess.*;
 import dbobjects.*;
 import chess.ChessGame;
 import chess.ChessBoard;
-
+import java.util.UUID;
 
 public class DataAccessTests {
     private static dbobjects.UserData goodUser;
@@ -15,14 +15,18 @@ public class DataAccessTests {
     private static chess.ChessGame game;
     private static chess.ChessBoard board;
     private static String defaultSerial;
+    private static String weirdUsername;
+    private static String authToken;
 
     @BeforeAll
     public static void init() {
         goodUser = new UserData("Charlie", "1234", "c.e.com");
         otherUser = new UserData("Albert", "5678", "c.g.net");
         thirdUser = new UserData("Greyson", "9123", "c.b.org");
+        weirdUsername = "A name with'nt quote'th' mark'ths";
         game = new ChessGame();
         game.getBoard().resetBoard();
+        authToken = UUID.randomUUID().toString();
         StringBuilder sb = new StringBuilder();
         sb.append("1{");
         sb.append("rnbqkbnr");
@@ -171,6 +175,146 @@ public class DataAccessTests {
         Assertions.assertNull(returned);
     }
 
+    @Test
+    @DisplayName("Get Game Object Good")
+    public void getGameObjectGood() throws Exception {
+        dbobjects.GameData gameOb;
+        GameDataAccess.newGame("A New Game");
+        dbobjects.GameData returned = GameDataAccess.getGameObject(1);
+        Assertions.assertEquals(1, returned.gameID());
+        Assertions.assertEquals(null, returned.blackUsername());
+        Assertions.assertEquals(null, returned.whiteUsername());
+        Assertions.assertEquals("A New Game", returned.gameName());
+        Assertions.assertEquals(defaultSerial, returned.game().serialize());
+    }
+
+    @Test
+    @DisplayName("Get Game Object Not Exists")
+    public void getGameObjectNotExists() throws Exception {
+        dbobjects.GameData gameOb;
+        GameDataAccess.newGame("A New Game");
+        dbobjects.GameData returned = GameDataAccess.getGameObject(2);
+        Assertions.assertNull(returned);
+    }
+
+    @Test
+    @DisplayName("Join Game Good")
+    public void joinGameGood() throws Exception {
+        dbobjects.UserData user = new dbobjects.UserData(weirdUsername, "1234", "a.e.com");
+        GameDataAccess.newGame("A New Game");
+        GameDataAccess.joinGame(user, chess.ChessGame.TeamColor.BLACK, 1);
+        dbobjects.GameData returned = GameDataAccess.getGameObject(1);
+        Assertions.assertNull(returned.whiteUsername());
+        Assertions.assertEquals(weirdUsername, returned.blackUsername());
+
+        GameDataAccess.joinGame(goodUser, chess.ChessGame.TeamColor.WHITE, 1);
+        dbobjects.GameData returned2 = GameDataAccess.getGameObject(1);
+        Assertions.assertEquals(goodUser.username(), returned2.whiteUsername());
+        Assertions.assertEquals(weirdUsername, returned2.blackUsername());
+    }
+
+    @Test
+    @DisplayName("Join Game Not Exists")
+    public void joinGameNotExists() throws Exception {
+        try {
+            GameDataAccess.joinGame(goodUser, chess.ChessGame.TeamColor.WHITE, 1);
+        }
+        catch(Exception e) {
+            Assertions.assertTrue(true);
+        }
+    }
+
+    @Test
+    @DisplayName("Clear Game Good")
+    public void clearGameGood() throws Exception {
+        GameDataAccess.clearGameData();
+        Assertions.assertEquals(0, numRows("GAME_DATA"));
+    }
+
+    @Test
+    @DisplayName("Create Auth Good")
+    public void createAuthGood() throws Exception {
+        AuthDataAccess.createAuth(authToken, goodUser.username());
+        Assertions.assertTrue(findAuth(authToken));
+        Assertions.assertTrue(findAuthUser(goodUser.username()));
+    }
+
+    @Test
+    @DisplayName("Create Auth Already Exists")
+    public void createAuthAlreadyExists() throws Exception {
+        AuthDataAccess.createAuth(authToken, goodUser.username());
+        try {
+            AuthDataAccess.createAuth(authToken, goodUser.username());
+        }
+        catch(DataAccessException e) {
+            Assertions.assertTrue(true);
+        }
+        catch(SQLException e) {
+            Assertions.fail("Wrong type of exception thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    @DisplayName("Get Auth Good")
+    public void getAuthGood() throws Exception {
+        AuthDataAccess.createAuth(authToken, goodUser.username());
+        Assertions.assertEquals(authToken, AuthDataAccess.getAuthToken(authToken));
+    }
+
+    @Test
+    @DisplayName("Get Auth Not Exists")
+    public void getAuthNotExists() throws Exception {
+        AuthDataAccess.createAuth(authToken, goodUser.username());
+        Assertions.assertNull(AuthDataAccess.getAuthToken("blah blah blah"));
+    }
+
+    @Test
+    @DisplayName("Get Auth Username Good")
+    public void getAuthUsernameGood() throws Exception {
+        AuthDataAccess.createAuth(authToken, goodUser.username());
+        Assertions.assertEquals(goodUser.username(), AuthDataAccess.getUsername(authToken));
+    }
+
+    @Test
+    @DisplayName("Get Auth Username Not Exists")
+    public void getAuthUsernameNotExits() throws Exception {
+        AuthDataAccess.createAuth(authToken, goodUser.username());
+        Assertions.assertNull(AuthDataAccess.getUsername("blah blah blah"));
+    }
+
+    @Test
+    @DisplayName("Delete Auth Good") 
+    public void deleteAuthGood() throws Exception {
+        AuthDataAccess.createAuth(authToken, goodUser.username());
+        AuthDataAccess.createAuth(UUID.randomUUID().toString(), otherUser.username());
+        AuthDataAccess.createAuth(UUID.randomUUID().toString(), thirdUser.username());
+        Assertions.assertTrue(AuthDataAccess.deleteAuthToken(authToken));
+        Assertions.assertNull(AuthDataAccess.getAuthToken(authToken));
+    }
+
+    @Test
+    @DisplayName("Delete Auth Not Exists")
+    public void deleteAuthNotExists() throws Exception {
+        String authToken2 = UUID.randomUUID().toString();
+        String authToken3 = UUID.randomUUID().toString();
+        AuthDataAccess.createAuth(authToken2, otherUser.username());
+        AuthDataAccess.createAuth(authToken3, thirdUser.username());
+        Assertions.assertFalse(AuthDataAccess.deleteAuthToken(authToken));
+        Assertions.assertEquals(authToken2, AuthDataAccess.getAuthToken(authToken2));
+        Assertions.assertEquals(authToken3, AuthDataAccess.getAuthToken(authToken3));
+    }
+
+    @Test
+    @DisplayName("Clear Auth Data Good")
+    public void clearAuthDataGood() throws Exception {
+        String authToken2 = UUID.randomUUID().toString();
+        String authToken3 = UUID.randomUUID().toString();
+        AuthDataAccess.createAuth(authToken2, otherUser.username());
+        AuthDataAccess.createAuth(authToken3, thirdUser.username());
+        AuthDataAccess.clearAuth();
+        Assertions.assertEquals(0, numRows("AUTH_DATA"));
+    }
+
     private int numRows(String tableName) throws Exception  {
         int numRows = -1;
         StringBuilder sb = new StringBuilder();
@@ -230,6 +374,46 @@ public class DataAccessTests {
         }
         catch(Exception e) {
             throw new Exception("Test issue: couldn't find good user: " + e.getMessage());
+        }
+    }
+
+    private boolean findAuth(String auth) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("SELECT *\n");
+        sb.append("FROM AUTH_DATA\n");
+        sb.append("WHERE AUTH_TOKEN = ?");
+
+        try(PreparedStatement getStatement = SQLDataAccess.CONN.prepareStatement(sb.toString())) {
+            getStatement.setString(1, auth);
+            ResultSet result = getStatement.executeQuery();
+
+            if(!result.isBeforeFirst()) {
+                return false;
+            }
+            return true;
+        }
+        catch(Exception e) {
+            throw e;
+        }
+    }
+
+    private boolean findAuthUser(String username) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("SELECT *\n");
+        sb.append("FROM AUTH_DATA\n");
+        sb.append("WHERE USERNAME = ?");
+
+        try(PreparedStatement getStatement = SQLDataAccess.CONN.prepareStatement(sb.toString())) {
+            getStatement.setString(1, username);
+            ResultSet result = getStatement.executeQuery();
+
+            if(!result.isBeforeFirst()) {
+                return false;
+            }
+            return true;
+        }
+        catch(Exception e) {
+            throw e;
         }
     }
 }
