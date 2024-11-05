@@ -7,6 +7,7 @@ import java.util.UUID;
 import dbobjects.*;
 import java.util.ArrayList;
 import java.sql.SQLException;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class Service {
     private static int nextGameID;
@@ -29,7 +30,7 @@ public class Service {
         if(user == null) {
             throw new UnauthorizedException(String.format("Error: no user with username: %s found", req.username));
         }
-        if(!UserDataAccess.checkPass(req.password, user.password())) {
+        if(!checkPass(req.password, user.password())) {
             throw new UnauthorizedException("Error: unauthorized");
         }
         String uuid = createAuthData();
@@ -130,5 +131,9 @@ public class Service {
         AuthDataAccess.clearAuth();
         GameDataAccess.clearGameData();
         return new ClearResponse();
+    }
+
+    private static boolean checkPass(String pass, String hash) {
+        return BCrypt.checkpw(pass, hash);
     }
 }

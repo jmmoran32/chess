@@ -77,7 +77,7 @@ public class UserDataAccess extends SQLDataAccess {
         UserDataAccess.TABLE.clear();
     }
 
-    public static String dumpTable() {
+    private static String dumpTable() {
         StringBuilder sb = new StringBuilder();
         sb.append("[");
         for(dbobjects.UserData record : TABLE) {
@@ -105,7 +105,7 @@ public class UserDataAccess extends SQLDataAccess {
         return BCrypt.hashpw(pass.toString(), BCrypt.gensalt(7));
     }
 
-    public static boolean checkPass(String pass, String hash) {
+    private static boolean checkPass(String pass, String hash) {
         return BCrypt.checkpw(pass, hash);
     }
 }
