@@ -7,19 +7,8 @@ import java.util.ArrayList;
 import java.sql.*;
 
 public class GameDataAccess extends SQLDataAccess {
-    private static final ArrayList<dbobjects.GameData> table = new ArrayList<dbobjects.GameData>();
+    private static final ArrayList<dbobjects.GameData> TABLE = new ArrayList<dbobjects.GameData>();
 
-    /*
-    static {
-        loadTable();
-    }
-    */
-
-    /*
-    public static ArrayList<dbobjects.GameData> getGames() {
-        return table;
-    }
-    */
 
     public static ArrayList<dbobjects.GameData> getGames() throws SQLException {
         ArrayList<GameData> games = new ArrayList<GameData>();
@@ -38,16 +27,6 @@ public class GameDataAccess extends SQLDataAccess {
         return games;
     }
 
-    /*
-    public static chess.ChessGame getGame(int gameID) throws DataAccessException {
-        for(dbobjects.GameData record : table) {
-            if(record.gameID() == gameID)
-                return record.game();
-        }
-        return null;
-    }
-    */
-
     public static chess.ChessGame getGame(int gameID) throws SQLException {
         GameData game = getGameObject(gameID);
         if(game == null) {
@@ -55,15 +34,6 @@ public class GameDataAccess extends SQLDataAccess {
         }
         return game.game();
     }
-
-    /*
-    public static dbobjects.GameData getGameObject(int gameID) {
-        for(dbobjects.GameData record : table)
-            if(record.gameID() == gameID)
-                return record;
-        return null;
-    }
-    */
 
     public static dbobjects.GameData getGameObject(int gameID) throws SQLException {
         StringBuilder sb = new StringBuilder();
@@ -114,15 +84,6 @@ public class GameDataAccess extends SQLDataAccess {
         }
     }
 
-    /*
-    public static void newGame(String gameName, int gameID) throws DataAccessException {
-        for(dbobjects.GameData record : table)
-            if(record.gameID() == gameID)
-                throw new DataAccessException(String.format("A game with gameID %d already exists in GameData as record no %ld", record.gameID(), record.id()));
-        table.add(new dbobjects.GameData(gameID, gameName, new chess.ChessGame()));
-    }
-    */
-
     public static int newGame(String gameName) throws DataAccessException, SQLException {
         StringBuilder sb = new StringBuilder();
         ChessGame game = new ChessGame();
@@ -131,7 +92,6 @@ public class GameDataAccess extends SQLDataAccess {
         sb = new StringBuilder();
         sb.append("INSERT INTO GAME_DATA\n");
         sb.append("(GAME_NAME, GAME)\n");
-        //sb.append(String.format("VALUES ('%s', '%s');", gameName, game.serialize()));
         sb.append("VALUES (?, ?);");
 
         try(PreparedStatement update = CONN.prepareStatement(sb.toString())) {
@@ -153,20 +113,11 @@ public class GameDataAccess extends SQLDataAccess {
         catch(SQLException e) {
             throw new SQLException("There was a problem getting the ID of the last game inserted: " + e.getMessage());
         }
-        table.add(new GameData(gameID, gameName, game));
+        TABLE.add(new GameData(gameID, gameName, game));
         return gameID;
     }
 
 
-    /*
-    public static void joinGame(dbobjects.UserData user, chess.ChessGame.TeamColor color, int gameID) throws SQLException {
-        dbobjects.GameData record = GameDataAccess.getGameObject(gameID);
-        if(color == chess.ChessGame.TeamColor.BLACK)
-            record.joinBlack(user.username());
-        else
-            record.joinWhite(user.username());
-    }
-    */
 
     public static void joinGame(dbobjects.UserData user, chess.ChessGame.TeamColor color, int gameID) throws SQLException {
         dbobjects.GameData record = GameDataAccess.getGameObject(gameID);
@@ -186,16 +137,6 @@ public class GameDataAccess extends SQLDataAccess {
         executeUpdateStatement(sb.toString());
     }
 
-    public static String dumpTable() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
-        for(dbobjects.GameData record : table) {
-            sb.append(record.toString());
-        }
-        sb.append("]");
-        return sb.toString();
-    }
-
     private static void loadTable() {
         ResultSet result;
         String getString = "SELECT * FROM GAME_DATA";
@@ -205,7 +146,7 @@ public class GameDataAccess extends SQLDataAccess {
             while(result.next()) {
                 String gameString = result.getString(4);
                 game = chess.ChessGame.deSerialize(gameString);
-                table.add(new dbobjects.GameData(result.getInt(0), result.getString(1), game));
+                TABLE.add(new dbobjects.GameData(result.getInt(0), result.getString(1), game));
             }
         }
         catch(SQLException e) {
@@ -215,7 +156,7 @@ public class GameDataAccess extends SQLDataAccess {
 
 
     public static void clearGameData() throws SQLException {
-        GameDataAccess.table.clear();
+        GameDataAccess.TABLE.clear();
         String truncateStatement = "TRUNCATE GAME_DATA;";
         executeUpdateStatement(truncateStatement);
     }

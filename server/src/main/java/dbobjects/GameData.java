@@ -22,7 +22,6 @@ public class GameData {
 
     public void joinBlack(String username) {this.blackUsername = username;}
 
-    public long id() {return this.id;}
     public int gameID() {return this.gameID;}
     public String whiteUsername() {return this.whiteUsername;}
     public String blackUsername() {return this.blackUsername;}
@@ -34,22 +33,30 @@ public class GameData {
         StringBuilder sb = new StringBuilder();
         sb.append("[");
         sb.append(String.format("%d, ", this.gameID));
-        if(this.whiteUsername != null)
+        if(this.whiteUsername != null) {
             sb.append(String.format("%s, ", this.whiteUsername));
-        else
+        }
+        else {
             sb.append("null, ");
-        if(this.blackUsername != null)
+        }
+        if(this.blackUsername != null) {
             sb.append(String.format("%s, ", this.blackUsername));
-        else
+        }
+        else {
             sb.append("null, ");
-        if(this.gameName != null)
+        }
+        if(this.gameName != null) {
             sb.append(String.format("%s, ", this.gameName));
-        else
+        }
+        else {
             sb.append("null, ");
-        if(this.game != null)
+        }
+        if(this.game != null) {
             sb.append(String.format("%s]", this.game.toString()));
-        else
+        }
+        else {
             sb.append("null]");
+        }
         return sb.toString();
     }
 }

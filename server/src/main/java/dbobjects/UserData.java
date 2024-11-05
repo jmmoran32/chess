@@ -14,7 +14,6 @@ public class UserData {
         this.email = email;
     }
 
-    public long id() {return this.id;}
     public String username() {return this.username;}
     public String password() {return this.password;}
     public String email() {return this.email;}
@@ -23,18 +22,24 @@ public class UserData {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("[");
-        if(this.username != null)
+        if(this.username != null) {
             sb.append(String.format("%s, ", this.username));
-        else
+        }
+        else {
             sb.append("null, ");
-        if(this.password != null)
+        }
+        if(this.password != null) {
             sb.append(String.format("%s, ", this.password));
-        else
+        }
+        else {
             sb.append("null, ");
-        if(this.email != null)
+        }
+        if(this.email != null) {
             sb.append(String.format("%s]", this.email));
-        else
+        }
+        else {
             sb.append("null]");
+        }
         return sb.toString();
     }
 }

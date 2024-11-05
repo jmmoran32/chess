@@ -6,7 +6,7 @@ import java.sql.*;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class UserDataAccess extends SQLDataAccess {
-    private static final ArrayList<dbobjects.UserData> table = new ArrayList<dbobjects.UserData>();
+    private static final ArrayList<dbobjects.UserData> TABLE = new ArrayList<dbobjects.UserData>();
 
     public static dbobjects.UserData getUser(String username) throws DataAccessException {
         StringBuilder sb = new StringBuilder();
@@ -23,7 +23,7 @@ public class UserDataAccess extends SQLDataAccess {
 
             if(result.next()) {
                 dbobjects.UserData user = new dbobjects.UserData(result.getString(1), result.getString(2), result.getString(3));
-                table.add(user);
+                TABLE.add(user);
                 return user;
             }
         }
@@ -63,7 +63,7 @@ public class UserDataAccess extends SQLDataAccess {
         catch(SQLException e) {
             throw new SQLDataAccessException("There was a problem creating a new user in the SQL database: " + e.getMessage());
         }
-        table.add(new dbobjects.UserData(username, hash, email));
+        TABLE.add(new dbobjects.UserData(username, hash, email));
     }
 
     public static void clearUsers() throws DataAccessException {
@@ -74,13 +74,13 @@ public class UserDataAccess extends SQLDataAccess {
         catch(SQLException e) {
             throw new SQLDataAccessException("There was a problem truncating table USER_DATA: " + e.getMessage());
         }
-        UserDataAccess.table.clear();
+        UserDataAccess.TABLE.clear();
     }
 
     public static String dumpTable() {
         StringBuilder sb = new StringBuilder();
         sb.append("[");
-        for(dbobjects.UserData record : table) {
+        for(dbobjects.UserData record : TABLE) {
             sb.append(record.toString());
         }
         sb.append("]");
@@ -93,7 +93,7 @@ public class UserDataAccess extends SQLDataAccess {
         try(PreparedStatement selectStatement = CONN.prepareStatement(getString)) {
             result = selectStatement.executeQuery();
             while(result.next()) {
-                table.add(new dbobjects.UserData(result.getString(1), result.getString(2), result.getString(3)));
+                TABLE.add(new dbobjects.UserData(result.getString(1), result.getString(2), result.getString(3)));
             }
         }
         catch(SQLException e) {
