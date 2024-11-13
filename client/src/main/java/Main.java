@@ -1,8 +1,15 @@
 import chess.*;
+import ui.UI;
+
 
 public class Main {
+    public static String URL = "http://localhost";
+    public static String PORT = "8080";
+    public static boolean IS_LOGGED_IN = false;
+
     public static void main(String[] args) {
-        var piece = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
-        System.out.println("♕ 240 Chess Client: " + piece);
+        String connectionUrl = URL + ":" + PORT;
+        
+        UI.run(connectionUrl);
     }
 }
