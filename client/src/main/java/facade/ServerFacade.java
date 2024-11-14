@@ -1,14 +1,11 @@
-package server;
+package facade;
 
-import request.*;
-import response.*;
 import com.google.gson.Gson;
 import java.io.*;
 import java.net.*;
-import exception.ResponseException;
-import dbobjects.GameData;
 import java.util.ArrayList;
 import chess.ChessGame;
+import java.util.Map;
 
 public class ServerFacade {
     private String url;
@@ -17,18 +14,24 @@ public class ServerFacade {
         this.url = url;
     }
 
-    public String registration(String username, String password, String email) {
+    public String registration(String username, String password, String email) throws ResponseException {
         RegisterRequest req = new RegisterRequest(username, password, email);
-        RegisterResponse res = this.makeRequest("POST", "/user", req, RegisterResponse.class); 
+        RegisterResponse res = makeRequest("POST", "/user", req, RegisterResponse.class); 
         return res.authToken();
     }
 
-    public String login(String username, String password) {
+    public String login(String username, String password) throws ResponseException {
+        LoginRequest req = new LoginRequest(username, password);
+        LoginResponse res = makeRequest("POST", "/session", req, LoginResponse.class);
+        return res.authToken();
     }
 
-    public void logout(String authToken) {
+    public void logout(String authToken) throws ResponseException {
+        LogoutRequest req = new LogoutRequest(authToken);
+        LogoutResponse res = makeRequest("DELETE", "/session", req, LogoutResponse.class);
     }
 
+    /*
     public ArrayList<GameData> listGames(String authToken) {
     }
 
@@ -40,10 +43,11 @@ public class ServerFacade {
 
     public void clearApplication() {
     }
+    */
 
-    private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass) throws Exception {
+    private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass) throws ResponseException {
         try {
-            URL url = (new URI(url + path)).toURL();
+            URL url = (new URI(this.url + path)).toURL();
             HttpURLConnection http = (HttpURLConnection) url.openConnection();
             http.setRequestMethod(method);
             http.setDoOutput(true);
@@ -81,9 +85,29 @@ public class ServerFacade {
     }
 
     private void throwIfNotSuccessful(HttpURLConnection http) throws IOException, ResponseException {
-        var status = http.getResponseCode();
-        if (!isSuccessful(status)) {
-            throw new ResponseException(status, "failure: " + status);
+        int status = http.getResponseCode();
+        if (!isSuccessful(status)) { 
+            try(InputStream err = http.getErrorStream()) {
+                InputStreamReader reader = new InputStreamReader(err);
+                Map<?, ?> map = new Gson().fromJson(reader, Map.class);
+                String message = (String) map.get("message");
+                if(message == null) {
+                    throw new ResponseException(500, "An unknown error occurred");
+                }
+                else if(status == 400) {
+                    throw new ResponseException(400, message);
+                }
+                else if(status == 401) {
+                    throw new ResponseException(401, message);
+                }
+                else if(status == 403) {
+                    throw new ResponseException(403, message);
+                }
+                else {
+                    throw new ResponseException(status, "An undefined exception occurred in facade: " + message);
+                }
+            }
+            //throw new ResponseException(status, "failure: " + status);
         }
     }
 

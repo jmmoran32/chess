@@ -1,14 +1,14 @@
 package ui;
 
 import java.util.Scanner;
-import client.Client;
+import facade.ServerFacade;
 
 public class UI {
-    private static Client CLIENT;
     public static String HEADER;
+    public static ServerFacade facade;
 
     public static void run(String url) {
-        CLIENT = new Client(url);
+        facade = new ServerFacade(url);
     }
 
     public static void preLog() {
