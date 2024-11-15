@@ -6,7 +6,8 @@ import facade.*;
 import spark.*;
 import java.sql.*;
 import dataaccess.SQLDataAccess;
-
+import java.util.ArrayList;
+import chess.ChessGame;
 
 public class ServerFacadeTests {
     private static final String url = "http://localhost:";
@@ -178,6 +179,108 @@ public class ServerFacadeTests {
         }
     }
 
+    @Test
+    @DisplayName("create game unauthorized")
+    public void createGameUnauthorized() {
+        String gameID = "";
+        String newAuth = "";
+        try {
+            String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when regiistering good user");
+        }
+        try {
+            newAuth = facade.login(goodUser[0], goodUser[1]);
+            Assertions.assertTrue(findAuth(newAuth));
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when loggin in good user");
+        }
+        try {
+            gameID = facade.createGame("asdf", "Good Game");
+            Assertions.fail("No exception was thrown");
+        }
+        catch(ResponseException e) {
+            Assertions.assertEquals(401, e.getStatus());
+        }
+        catch(Exception e) {
+            Assertions.fail("Wrong exception thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    @DisplayName("list games good")
+    public void listGamesGood() {
+        String newAuth = "";
+        try {
+            String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when regiistering good user");
+        }
+        try {
+            newAuth = facade.login(goodUser[0], goodUser[1]);
+            Assertions.assertTrue(findAuth(newAuth));
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when loggin in good user");
+        }
+        try {
+            facade.createGame(newAuth, game1);
+            facade.createGame(newAuth, game2);
+            facade.createGame(newAuth, game3);
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when creating a game");
+        }
+        try {
+            ArrayList<ChessGame> games = facade.listGames(newAuth);
+            Assertions.assertEquals(3, games.size());
+        }
+        catch(Exception e) {
+            Assertions.fail("An exceptinon was thrown when requesting a game list: " + e.getMessage());
+        }
+    }
+
+    @Test
+    @DisplayName("list games unauthorized")
+    public void listGamesUnauthorized() {
+        String newAuth = "";
+        try {
+            String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when regiistering good user");
+        }
+        try {
+            newAuth = facade.login(goodUser[0], goodUser[1]);
+            Assertions.assertTrue(findAuth(newAuth));
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when loggin in good user");
+        }
+        try {
+            facade.createGame(newAuth, game1);
+            facade.createGame(newAuth, game2);
+            facade.createGame(newAuth, game3);
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when creating a game");
+        }
+        try {
+            ArrayList<ChessGame> games = facade.listGames("1234");
+            Assertions.assertEquals(3, games.size());
+            Assertions.fail("No exception was thrown");
+        }
+        catch(ResponseException e) {
+            Assertions.assertEquals(401, e.getStatus());
+        }
+        catch(Exception e) {
+            Assertions.fail("wrong exception thrown: " + e.getMessage());
+        }
+    }
+    
     private boolean findAuth(String auth) throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT *\n");
