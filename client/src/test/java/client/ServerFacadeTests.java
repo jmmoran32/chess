@@ -137,7 +137,7 @@ public class ServerFacadeTests {
             Assertions.fail("An exception was thrown when loggin in good user");
         }
         try {
-            facade.logout(newAuth);
+            facade.logout("asdf");
             Assertions.fail("No exception was thrown");
         }
         catch(ResponseException e) {

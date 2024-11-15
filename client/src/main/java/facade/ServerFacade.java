@@ -16,19 +16,19 @@ public class ServerFacade {
 
     public String registration(String username, String password, String email) throws ResponseException {
         RegisterRequest req = new RegisterRequest(username, password, email);
-        RegisterResponse res = makeRequest("POST", "/user", req, RegisterResponse.class); 
+        RegisterResponse res = makeRequest("POST", "/user", req, RegisterResponse.class, null); 
         return res.authToken();
     }
 
     public String login(String username, String password) throws ResponseException {
         LoginRequest req = new LoginRequest(username, password);
-        LoginResponse res = makeRequest("POST", "/session", req, LoginResponse.class);
+        LoginResponse res = makeRequest("POST", "/session", req, LoginResponse.class, null);
         return res.authToken();
     }
 
     public void logout(String authToken) throws ResponseException {
-        LogoutRequest req = new LogoutRequest(authToken);
-        LogoutResponse res = makeRequest("DELETE", "/session", req, LogoutResponse.class);
+        LogoutRequest req = new LogoutRequest();
+        LogoutResponse res = makeRequest("DELETE", "/session", req, LogoutResponse.class, authToken);
     }
 
     /*
@@ -45,18 +45,25 @@ public class ServerFacade {
     }
     */
 
-    private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass) throws ResponseException {
+    private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass, String authToken) throws ResponseException {
         try {
             URL url = (new URI(this.url + path)).toURL();
             HttpURLConnection http = (HttpURLConnection) url.openConnection();
             http.setRequestMethod(method);
             http.setDoOutput(true);
+            if(authToken != null) {
+                http.setRequestProperty("Authorization", authToken);
+            }
 
             writeBody(request, http);
             http.connect();
             throwIfNotSuccessful(http);
             return readBody(http, responseClass);
-        } catch (Exception ex) {
+        } 
+        catch(ResponseException e) {
+            throw e;
+        }
+        catch (Exception ex) {
             throw new ResponseException(500, ex.getMessage());
         }
     }
@@ -90,14 +97,15 @@ public class ServerFacade {
             try(InputStream err = http.getErrorStream()) {
                 InputStreamReader reader = new InputStreamReader(err);
                 Map<?, ?> map = new Gson().fromJson(reader, Map.class);
-                String message = (String) map.get("message");
+                String messageStream = (String) map.get("message");
+                String message = http.getResponseMessage();
                 if(message == null) {
                     throw new ResponseException(500, "An unknown error occurred");
                 }
-                else if(status == 400) {
+                else if(message.contains("equest")) {
                     throw new ResponseException(400, message);
                 }
-                else if(status == 401) {
+                else if(message.contains("Unauthorized")) {
                     throw new ResponseException(401, message);
                 }
                 else if(status == 403) {
