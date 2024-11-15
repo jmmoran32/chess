@@ -48,10 +48,20 @@ public class ServerFacade {
         return res.gameID();
     }
 
-    /*
-    public void joinGame(String authToken, ChessGame.TeamColor color, int gameID) {
+    public boolean joinGame(String authToken, ChessGame.TeamColor color, String gameID) throws ResponseException {
+        String colorS;
+        if(color == ChessGame.TeamColor.WHITE) {
+            colorS = "WHITE";
+        }
+        else {
+            colorS = "BLACK";
+        }
+        JoinRequest req = new JoinRequest(colorS, gameID);
+        JoinResponse res = makeRequest("PUT", "/game", req, JoinResponse.class, authToken);
+        return res != null;
     }
 
+    /*
     public void clearApplication() {
     }
     */

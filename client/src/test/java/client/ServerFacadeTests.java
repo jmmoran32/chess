@@ -280,7 +280,107 @@ public class ServerFacadeTests {
             Assertions.fail("wrong exception thrown: " + e.getMessage());
         }
     }
-    
+
+    @Test
+    @DisplayName("join white good")
+    public void joinWhiteGood() {
+        String gameID = "";
+        String newAuth = "";
+        try {
+            String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when regiistering good user");
+        }
+        try {
+            newAuth = facade.login(goodUser[0], goodUser[1]);
+            Assertions.assertTrue(findAuth(newAuth));
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when loggin in good user");
+        }
+        try {
+            gameID = facade.createGame(newAuth, "Good Game");
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when creating a game");
+        }
+        try {
+            Assertions.assertTrue(facade.joinGame(newAuth, ChessGame.TeamColor.WHITE, gameID));
+            Assertions.assertTrue(checkJoined(goodUser[0], ChessGame.TeamColor.WHITE, gameID));
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when joining a game");
+        }
+    }
+
+    @Test
+    @DisplayName("join white already taken")
+    public void joinWhiteAlreadyTaken() {
+        String gameID = "";
+        String newAuth = "";
+        String secondAuth = "";
+        String secondUsername = "Alvin";
+        try {
+            String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
+            String authToken2 = facade.registration(secondUsername, "5678", "org.com");
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when registering users");
+        }
+        try {
+            newAuth = facade.login(goodUser[0], goodUser[1]);
+            secondAuth = facade.login(secondUsername, "5678");
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when loggin in users");
+        }
+        try {
+            gameID = facade.createGame(newAuth, "Good Game");
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when creating a game");
+        }
+        try {
+            Assertions.assertTrue(facade.joinGame(newAuth, ChessGame.TeamColor.WHITE, gameID));
+            Assertions.assertTrue(checkJoined(goodUser[0], ChessGame.TeamColor.WHITE, gameID));
+
+            facade.joinGame(secondAuth, ChessGame.TeamColor.WHITE, gameID);
+            Assertions.fail("no exceptions were thrown");
+        }
+        catch(ResponseException e) {
+            Assertions.assertEquals(403, e.getStatus());
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when joining a game");
+        }
+    }
+
+    private boolean checkJoined(String username, ChessGame.TeamColor color, String gameID) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("SELECT *\n");
+        sb.append("FROM GAME_DATA\n");
+        if(color == ChessGame.TeamColor.WHITE) {
+            sb.append("WHERE WHITE_USERNAME = ?;");
+        }
+        else {
+            sb.append("WHERE BLACK_USERNAME = ?;");
+        }
+
+        try(PreparedStatement getStatement = SQLDataAccess.CONN.prepareStatement(sb.toString())) {
+            getStatement.setString(1, username);
+            ResultSet result = getStatement.executeQuery();
+
+            if(!result.isBeforeFirst()) {
+                return false;
+            }
+            return true;
+        }
+        catch(Exception e) {
+            throw e;
+        }
+    }
+
     private boolean findAuth(String auth) throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT *\n");
