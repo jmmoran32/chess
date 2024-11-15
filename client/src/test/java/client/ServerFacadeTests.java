@@ -13,6 +13,9 @@ public class ServerFacadeTests {
     private static Server server;
     private static ServerFacade facade;
     private static String goodUser[] = {"Charlie", "1234", "c.e.com"};
+    private static String game1 = "A game with ' semi' colons";
+    private static String game2 = "a different; game";
+    private static String game3 = "last on^e";
 
     @BeforeAll
     public static void init() throws Exception {
@@ -145,6 +148,33 @@ public class ServerFacadeTests {
         }
         catch(Exception e) {
             Assertions.fail("Wrong exception thrown");
+        }
+    }
+
+    @Test
+    @DisplayName("create game good")
+    public void createGameGood() {
+        String gameID = "";
+        String newAuth = "";
+        try {
+            String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when regiistering good user");
+        }
+        try {
+            newAuth = facade.login(goodUser[0], goodUser[1]);
+            Assertions.assertTrue(findAuth(newAuth));
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when loggin in good user");
+        }
+        try {
+            gameID = facade.createGame(newAuth, "Good Game");
+            Assertions.assertTrue(true);
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when creating a game");
         }
     }
 

@@ -31,13 +31,24 @@ public class ServerFacade {
         LogoutResponse res = makeRequest("DELETE", "/session", req, LogoutResponse.class, authToken);
     }
 
+    public ArrayList<ChessGame> listGames(String authToken) throws ResponseException {
+        ListRequest req = new ListRequest();
+        ListGameResponse res = makeRequest("GET", "/game", req, ListGameResponse.class, authToken);
+
+        ArrayList<ChessGame> arr = new ArrayList<ChessGame>();;
+        for(ChessGameRecord r : res.games()) {
+            arr.add(r.game());
+        }
+        return arr;
+    }
+
+    public String createGame(String authToken, String gameName) throws ResponseException {
+        CreateRequest req = new CreateRequest(gameName);
+        CreateResponse res = makeRequest("POST", "/game", req, CreateResponse.class, authToken);
+        return res.gameID();
+    }
+
     /*
-    public ArrayList<GameData> listGames(String authToken) {
-    }
-
-    public int createGame(String authToken, String gameName) {
-    }
-
     public void joinGame(String authToken, ChessGame.TeamColor color, int gameID) {
     }
 
@@ -102,13 +113,13 @@ public class ServerFacade {
                 if(message == null) {
                     throw new ResponseException(500, "An unknown error occurred");
                 }
-                else if(message.contains("equest")) {
+                else if(message.contains("Bad Request")) {
                     throw new ResponseException(400, message);
                 }
                 else if(message.contains("Unauthorized")) {
                     throw new ResponseException(401, message);
                 }
-                else if(status == 403) {
+                else if(message.contains("Already Taken")) {
                     throw new ResponseException(403, message);
                 }
                 else {

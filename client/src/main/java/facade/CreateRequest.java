@@ -1,11 +1,9 @@
 package facade;
 
 public class CreateRequest {
-    public String authToken;
     public String gameName;
 
-    public CreateRequest(String t, String n) {
-        this.authToken = t;
+    public CreateRequest(String n) {
         this.gameName = n;
     }
 }
