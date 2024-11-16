@@ -71,11 +71,6 @@ public class ServerFacadeTests {
     public void loginGood() {
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when regiistering good user");
-        }
-        try {
             String newAuth = facade.login(goodUser[0], goodUser[1]);
             Assertions.assertTrue(findAuth(newAuth));
         }
@@ -105,17 +100,7 @@ public class ServerFacadeTests {
         String newAuth = "";
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when regiistering good user");
-        }
-        try {
             newAuth = facade.login(goodUser[0], goodUser[1]);
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when loggin in good user");
-        }
-        try {
             facade.logout(newAuth);
             Assertions.assertFalse(findAuth(newAuth));
         }
@@ -130,17 +115,7 @@ public class ServerFacadeTests {
         String newAuth = "";
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when regiistering good user");
-        }
-        try {
             newAuth = facade.login(goodUser[0], goodUser[1]);
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when loggin in good user");
-        }
-        try {
             facade.logout("asdf");
             Assertions.fail("No exception was thrown");
         }
@@ -159,18 +134,8 @@ public class ServerFacadeTests {
         String newAuth = "";
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when regiistering good user");
-        }
-        try {
             newAuth = facade.login(goodUser[0], goodUser[1]);
             Assertions.assertTrue(findAuth(newAuth));
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when loggin in good user");
-        }
-        try {
             gameID = facade.createGame(newAuth, "Good Game");
             Assertions.assertTrue(true);
         }
@@ -186,18 +151,8 @@ public class ServerFacadeTests {
         String newAuth = "";
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when regiistering good user");
-        }
-        try {
             newAuth = facade.login(goodUser[0], goodUser[1]);
             Assertions.assertTrue(findAuth(newAuth));
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when loggin in good user");
-        }
-        try {
             gameID = facade.createGame("asdf", "Good Game");
             Assertions.fail("No exception was thrown");
         }
@@ -215,26 +170,11 @@ public class ServerFacadeTests {
         String newAuth = "";
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when regiistering good user");
-        }
-        try {
             newAuth = facade.login(goodUser[0], goodUser[1]);
             Assertions.assertTrue(findAuth(newAuth));
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when loggin in good user");
-        }
-        try {
             facade.createGame(newAuth, game1);
             facade.createGame(newAuth, game2);
             facade.createGame(newAuth, game3);
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when creating a game");
-        }
-        try {
             ArrayList<ChessGame> games = facade.listGames(newAuth);
             Assertions.assertEquals(3, games.size());
         }
@@ -249,26 +189,11 @@ public class ServerFacadeTests {
         String newAuth = "";
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when regiistering good user");
-        }
-        try {
             newAuth = facade.login(goodUser[0], goodUser[1]);
             Assertions.assertTrue(findAuth(newAuth));
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when loggin in good user");
-        }
-        try {
             facade.createGame(newAuth, game1);
             facade.createGame(newAuth, game2);
             facade.createGame(newAuth, game3);
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when creating a game");
-        }
-        try {
             ArrayList<ChessGame> games = facade.listGames("1234");
             Assertions.assertEquals(3, games.size());
             Assertions.fail("No exception was thrown");
@@ -288,24 +213,9 @@ public class ServerFacadeTests {
         String newAuth = "";
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when regiistering good user");
-        }
-        try {
             newAuth = facade.login(goodUser[0], goodUser[1]);
             Assertions.assertTrue(findAuth(newAuth));
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when loggin in good user");
-        }
-        try {
             gameID = facade.createGame(newAuth, "Good Game");
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when creating a game");
-        }
-        try {
             Assertions.assertTrue(facade.joinGame(newAuth, ChessGame.TeamColor.WHITE, gameID));
             Assertions.assertTrue(checkJoined(goodUser[0], ChessGame.TeamColor.WHITE, gameID));
         }
@@ -324,24 +234,9 @@ public class ServerFacadeTests {
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
             String authToken2 = facade.registration(secondUsername, "5678", "org.com");
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when registering users");
-        }
-        try {
             newAuth = facade.login(goodUser[0], goodUser[1]);
             secondAuth = facade.login(secondUsername, "5678");
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when loggin in users");
-        }
-        try {
             gameID = facade.createGame(newAuth, "Good Game");
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when creating a game");
-        }
-        try {
             Assertions.assertTrue(facade.joinGame(newAuth, ChessGame.TeamColor.WHITE, gameID));
             Assertions.assertTrue(checkJoined(goodUser[0], ChessGame.TeamColor.WHITE, gameID));
 
@@ -362,31 +257,11 @@ public class ServerFacadeTests {
         String newAuth = "";
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when regiistering good user");
-        }
-        try {
             newAuth = facade.login(goodUser[0], goodUser[1]);
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when loggin in good user");
-        }
-        try {
             facade.createGame(newAuth, game1);
             facade.createGame(newAuth, game2);
             facade.createGame(newAuth, game3);
-        }
-        catch(Exception e) {
-            Assertions.fail("An exception was thrown when creating a game");
-        }
-        try {
             ArrayList<ChessGame> games = facade.listGames(newAuth);
-        }
-        catch(Exception e) {
-            Assertions.fail("An exceptinon was thrown when requesting a game list: " + e.getMessage());
-        }
-        try {
             facade.clearApplication();
             Assertions.assertTrue(isEmpty());
         }
