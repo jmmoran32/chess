@@ -61,10 +61,10 @@ public class ServerFacade {
         return res != null;
     }
 
-    /*
-    public void clearApplication() {
+    public void clearApplication() throws ResponseException {
+        ClearRequest req = new ClearRequest();
+        ClearResponse res = makeRequest("DELETE", "/db", req, ClearResponse.class, null);
     }
-    */
 
     private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass, String authToken) throws ResponseException {
         try {

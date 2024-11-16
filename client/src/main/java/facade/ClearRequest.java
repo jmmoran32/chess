@@ -1,3 +1,5 @@
 package facade;
 
-public class ClearRequest{}
+public class ClearRequest{ 
+    public ClearRequest() {}
+}

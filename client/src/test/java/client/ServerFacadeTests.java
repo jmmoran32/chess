@@ -356,6 +356,45 @@ public class ServerFacadeTests {
         }
     }
 
+    @Test
+    @DisplayName("clear")
+    public void clear() {
+        String newAuth = "";
+        try {
+            String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when regiistering good user");
+        }
+        try {
+            newAuth = facade.login(goodUser[0], goodUser[1]);
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when loggin in good user");
+        }
+        try {
+            facade.createGame(newAuth, game1);
+            facade.createGame(newAuth, game2);
+            facade.createGame(newAuth, game3);
+        }
+        catch(Exception e) {
+            Assertions.fail("An exception was thrown when creating a game");
+        }
+        try {
+            ArrayList<ChessGame> games = facade.listGames(newAuth);
+        }
+        catch(Exception e) {
+            Assertions.fail("An exceptinon was thrown when requesting a game list: " + e.getMessage());
+        }
+        try {
+            facade.clearApplication();
+            Assertions.assertTrue(isEmpty());
+        }
+        catch(Exception e) {
+            Assertions.fail("There was an error while clearing the database");
+        }
+    }
+
     private boolean checkJoined(String username, ChessGame.TeamColor color, String gameID) throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT *\n");
@@ -379,6 +418,34 @@ public class ServerFacadeTests {
         catch(Exception e) {
             throw e;
         }
+    }
+
+    private boolean isEmpty() throws Exception {
+        boolean empty1 = false;
+        boolean empty2 = false;
+        boolean empty3 = false;
+        String query = "SELECT * FROM USER_DATA;";
+        try(PreparedStatement getStatement = SQLDataAccess.CONN.prepareStatement(query)) {
+            ResultSet result = getStatement.executeQuery();
+            if(!result.isBeforeFirst()) {
+                empty1 = true;
+            }
+        }
+        query = "SELECT * FROM GAME_DATA;";
+        try(PreparedStatement getStatement = SQLDataAccess.CONN.prepareStatement(query)) {
+            ResultSet result = getStatement.executeQuery();
+            if(!result.isBeforeFirst()) {
+                empty2 = true;
+            }
+        }
+        query = "SELECT * FROM AUTH_DATA;";
+        try(PreparedStatement getStatement = SQLDataAccess.CONN.prepareStatement(query)) {
+            ResultSet result = getStatement.executeQuery();
+            if(!result.isBeforeFirst()) {
+                empty3 = true;
+            }
+        }
+        return empty1 && empty2 && empty3;
     }
 
     private boolean findAuth(String auth) throws Exception {
