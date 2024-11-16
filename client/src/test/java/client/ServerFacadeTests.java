@@ -175,7 +175,7 @@ public class ServerFacadeTests {
             facade.createGame(newAuth, game1);
             facade.createGame(newAuth, game2);
             facade.createGame(newAuth, game3);
-            ArrayList<ChessGame> games = facade.listGames(newAuth);
+            ArrayList<ChessGameRecord> games = facade.listGames(newAuth);
             Assertions.assertEquals(3, games.size());
         }
         catch(Exception e) {
@@ -194,7 +194,7 @@ public class ServerFacadeTests {
             facade.createGame(newAuth, game1);
             facade.createGame(newAuth, game2);
             facade.createGame(newAuth, game3);
-            ArrayList<ChessGame> games = facade.listGames("1234");
+            ArrayList<ChessGameRecord> games = facade.listGames("1234");
             Assertions.assertEquals(3, games.size());
             Assertions.fail("No exception was thrown");
         }
@@ -261,7 +261,7 @@ public class ServerFacadeTests {
             facade.createGame(newAuth, game1);
             facade.createGame(newAuth, game2);
             facade.createGame(newAuth, game3);
-            ArrayList<ChessGame> games = facade.listGames(newAuth);
+            ArrayList<ChessGameRecord> games = facade.listGames(newAuth);
             facade.clearApplication();
             Assertions.assertTrue(isEmpty());
         }
