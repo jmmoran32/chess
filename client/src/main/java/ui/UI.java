@@ -20,14 +20,6 @@ public class UI {
     private static final HashMap<String, Integer> indexMap = new HashMap<String, Integer>();
     private static int listIndex = 1;
 
-    private static final String WHITE_TILE = "43m";
-    private static final String BLACK_TILE = "45m";
-    private static final String WHITE_PIECE = "32;";
-    private static final String BLACK_PIECE = "31;";
-    private static String WHITE_ON_WHITE;
-    private static String WHITE_ON_BLACK;
-    private static String BLACK_ON_WHITE;
-    private static String BLACK_ON_BLACK;
 
     public static void run(String url) {
         header = "[Logged out]$ "; 
@@ -201,6 +193,40 @@ public class UI {
                 printGameList();
                 return;
             case "join":
+                if(input.length < 3) {
+                    System.out.println("Invalid command");
+                    drawPostLog();
+                }
+                ChessGame.TeamColor color;
+                if(input[1].equalsIgnoreCase("white")) {
+                    color = ChessGame.TeamColor.WHITE;
+                }
+                else if(input[1].equalsIgnoreCase("black")) {
+                    color = ChessGame.TeamColor.BLACK;
+                }
+                else {
+                    System.out.println("Invalid color. choose \'white\' or \'black\'");
+                    return;
+                }
+
+                Integer gameIDInt = indexMap.get(input[2]);
+                if(gameIDInt == null) {
+                    System.out.println("Invalid game id. type 'list' to see available options");
+                    return;
+                }
+                ChessGameRecord r = gamesMap.get(gameIDInt.toString());
+                if(r == null) {
+                    System.out.println("Invalid game id. type 'list' to see available options");
+                    return;
+                }
+                if(facade.joinGame(authToken, color, r.gameID())) {
+                    Game.playGame(r.game(), color);
+                }
+                else {
+                    System.out.println("There was a problem joining the game. This shouldn't happen");
+                    return;
+                }
+
                 return;
             case "logout":
                 facade.logout(authToken);
@@ -209,6 +235,7 @@ public class UI {
                 header = "[Logged out]$ "; 
                 return;
             case "quit":
+                facade.logout(authToken);
                 System.out.println("Bye-bye");
                 quit = true;
                 return;
@@ -275,56 +302,4 @@ public class UI {
         System.out.println(sb.toString());
     }
 
-    private String[] formattedBoard(ChessGame game) {
-        char[] whiteBoard = new char[64];
-        char[] blackBoard;
-        char[] bucketBoard;
-        char bucketChar;
-        String bucketTile;
-        String bucketPiece;
-        
-        whiteBoard = game.getBoard().serialize().toCharArray();
-        if(game.getTeamTurn() == ChessGame.TeamColor.BLACK) {
-            blackBoard = new char[64];
-            int sum;
-            for(int i = 0; i < 64; i++) {
-                blackBoard[i] = whiteBoard[63 - i];
-            }
-            bucketBoard = blackBoard;
-        }
-        else {
-            bucketBoard = whiteBoard;
-        }
-        StringBuilder sb = new StringBuilder();
-        String board[] = new String[8];
-        boolean whitetile = true;
-        for(int i = 0; i < 8; i++) {
-            for(int j = 0; j < 8; j++) {
-                bucketChar = bucketBoard[i * 8 + j];
-                if(bucketChar < 91) {
-                    bucketPiece = WHITE_PIECE;
-                }
-                else {
-                    bucketPiece = BLACK_PIECE;
-                }
-                if(whitetile) {
-                    bucketTile = WHITE_TILE;
-                }
-                else {
-                    bucketTile = BLACK_TILE;
-                }
-                sb.append("\033[");
-                sb.append(bucketPiece);
-                sb.append(bucketTile);
-                sb.append(bucketChar);
-
-                whitetile ^= true;
-            }
-            sb.append("\033[0m\n");
-            board[i] = sb.toString();
-            sb = new StringBuilder();
-            whitetile ^= true;
-        }
-        return board;
-    }
 }
