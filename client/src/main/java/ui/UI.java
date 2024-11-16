@@ -5,6 +5,7 @@ import facade.ServerFacade;
 import facade.ResponseException;
 import java.util.HashMap;
 import chess.ChessGame;
+import java.util.ArrayList;
 
 public class UI {
     private static String header;
@@ -17,7 +18,6 @@ public class UI {
     private static final HashMap<Integer, ChessGame> games = new HashMap<Integer, ChessGame>();
 
     public static void run(String url) {
-        updateGameList();
         header = "[Logged out]$ "; 
         facade = new ServerFacade(url);
         s = new Scanner(System.in);
@@ -30,6 +30,7 @@ public class UI {
                 }
 
                 while(isLoggedIn && !quit) {
+                    postLog();
                 }
             }
             catch(Exception e) {
@@ -161,7 +162,7 @@ public class UI {
         return;
     }
 
-    private static void postLog() {
+    private static void postLog() throws Exception {
         String input[];
 
         System.out.print(header);
@@ -174,15 +175,40 @@ public class UI {
 
         switch(input[0]) {
             case "create":
+                if(input.length < 2) {
+                    System.out.println("Invalid command");
+                    drawPostLog();
+                }
+                String gameName = input[1];
+                String newGameID = facade.createGame(authToken, gameName);
+                System.out.println("Created game: " + gameName);
+                return;
+
             case "list":
+                try {
+                ArrayList<ChessGame> gameList = facade.listGames(authToken);
+                System.out.println(gameList.get(0).getBoard().toString());
+                }
+                catch(Exception e) {
+                    System.out.println("Unsuccessful list: " + e.getMessage());
+                }
+                return;
             case "join":
+                return;
             case "logout":
+                return;
             case "quit":
+                return;
             case "help":
+                return;
             default:
+                return;
         }
     }
 
-    private static void updateGameList() {
+    /*
+    private static void updateGameList() throws Exception {
+        ArrayList<ChessGame> gameList = facade.listGames(authToken);
     }
+    */
 }

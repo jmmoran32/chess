@@ -31,18 +31,15 @@ public class ServerFacade {
         LogoutResponse res = makeRequest("DELETE", "/session", req, LogoutResponse.class, authToken);
     }
 
-    public ArrayList<ChessGameRecord> listGames(String authToken) throws ResponseException {
+    public ArrayList<ChessGame> listGames(String authToken) throws ResponseException {
         ListRequest req = new ListRequest();
         ListGameResponse res = makeRequest("GET", "/game", req, ListGameResponse.class, authToken);
 
-        /*
         ArrayList<ChessGame> arr = new ArrayList<ChessGame>();;
         for(ChessGameRecord r : res.games()) {
             arr.add(r.game());
         }
         return arr;
-        */
-        return res.games();
     }
 
     public String createGame(String authToken, String gameName) throws ResponseException {
