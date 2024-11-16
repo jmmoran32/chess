@@ -3,16 +3,22 @@ package ui;
 import java.util.Scanner;
 import facade.ServerFacade;
 import facade.ResponseException;
+import java.util.HashMap;
+import chess.ChessGame;
 
 public class UI {
-    public static String HEADER;
-    public static ServerFacade facade;
-    public static String authToken;
-    public static Scanner s;
-    public static boolean isLoggedIn = false;
-    public static boolean quit = false;
+    private static String header;
+    private static ServerFacade facade;
+    private static String authToken;
+    private static String username;
+    private static Scanner s;
+    private static boolean isLoggedIn = false;
+    private static boolean quit = false;
+    private static final HashMap<Integer, ChessGame> games = new HashMap<Integer, ChessGame>();
 
     public static void run(String url) {
+        updateGameList();
+        header = "[Logged out]$ "; 
         facade = new ServerFacade(url);
         s = new Scanner(System.in);
 
@@ -35,7 +41,7 @@ public class UI {
         return;
     }
 
-    public static boolean handleException(Exception e) {
+    private static boolean handleException(Exception e) {
         if(e instanceof ResponseException) {
             ResponseException re = (ResponseException) e;
             switch(re.getStatus()) {
@@ -60,7 +66,7 @@ public class UI {
         return true;
     }
 
-    public static void drawPreLog() {
+    private static void drawPreLog() {
         StringBuilder sb = new StringBuilder();
         sb.append("register <username> <password> <email>\n");
         sb.append("login <username> <password>\n");
@@ -69,10 +75,10 @@ public class UI {
         System.out.println(sb.toString());
     }
 
-    public static void preLog() throws Exception {
+    private static void preLog() throws Exception {
         String input[];
 
-            System.out.print(HEADER);
+            System.out.print(header);
             input = s.nextLine().split(" ");
             if(input.length == 0) {
                 System.out.println("Invalid command");
@@ -90,7 +96,9 @@ public class UI {
                 String password = input[2];
                 String email = input[3];
                 if(facade.registration(username, password, email) == null) {
-                    throw new Exception("An unknown error occurred");
+                    System.out.println("Invalid command");
+                    drawPreLog();
+                    return;
                 }
                 System.out.println("Registration Successful");
                 return;
@@ -108,10 +116,13 @@ public class UI {
                         throw new ResponseException(500, "A problem occurred loging in");
                     }
                     authToken = newAuth;
+                    username = usernameL;
+                    header = "[" + username + "]$ ";
                 }
                 catch(ResponseException e) {
                     if(e.getStatus() == 401) {
                         System.out.println("Incorrect username or password");
+                        return;
                     }
                     else {
                         throw e;
@@ -138,18 +149,40 @@ public class UI {
         }
     }
 
-    public static void drawPostLog() {
-        quit = true;
-        System.out.println("Not ready for post log yet");
+    private static void drawPostLog() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("create <name>\n");
+        sb.append("list\n");
+        sb.append("join <id>\n");
+        sb.append("logout\n");
+        sb.append("quit\n");
+        sb.append("help");
+        System.out.println(sb.toString());
         return;
     }
 
-    public static void printCliHelp() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Usage: <bin> [OPTION]\n");
-        sb.append("\tOptions:\n");
-        sb.append("\t\t-u [ARG] [ARG]: log in with username and password\n");
-        sb.append("\t\t-h: print this message and quit\n");
-        System.out.print(sb.toString());
+    private static void postLog() {
+        String input[];
+
+        System.out.print(header);
+        input = s.nextLine().split(" ");
+        if(input.length == 0) {
+            System.out.println("Invalid command");
+            drawPreLog();
+            return;
+        }
+
+        switch(input[0]) {
+            case "create":
+            case "list":
+            case "join":
+            case "logout":
+            case "quit":
+            case "help":
+            default:
+        }
+    }
+
+    private static void updateGameList() {
     }
 }
