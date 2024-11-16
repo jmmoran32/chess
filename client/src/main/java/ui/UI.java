@@ -16,7 +16,7 @@ public class UI {
     private static Scanner s;
     private static boolean isLoggedIn = false;
     private static boolean quit = false;
-    private static final HashMap<String, ChessGame> gamesMap = new HashMap<String, ChessGame>();
+    private static final HashMap<String, ChessGameRecord> gamesMap = new HashMap<String, ChessGameRecord>();
 
     private static final String WHITE_TILE = "43m";
     private static final String BLACK_TILE = "45m";
@@ -218,7 +218,7 @@ public class UI {
         ArrayList<String> keysFromDB = new ArrayList<String>();
 
         for(ChessGameRecord r : gameList) {
-            gamesMap.put(r.gameID(), r.game());
+            gamesMap.put(r.gameID(), r);
             keysFromDB.add(r.gameID());
         }
 
@@ -230,6 +230,38 @@ public class UI {
     }
 
     private static void printGameList() {
+        StringBuilder sb = new StringBuilder();
+        int i = 1;
+
+        for(ChessGameRecord r : gamesMap.values()) {
+            sb.append("++++++++++++++++\n");
+            sb.append(i++);
+            sb.append(String.format("Game name: %s\n", r.gameName()));
+            sb.append("Current turn: ");
+            if(r.game().getTeamTurn() == ChessGame.TeamColor.WHITE) {
+                sb.append("white\n");
+            }
+            else {
+                sb.append("black\n");
+            }
+            sb.append("player white: ");
+            if(r.whiteUsername() == null) {
+                sb.append("none\n");
+            }
+            else {
+                sb.append(String.format("%s\n", r.whiteUsername()));
+            }
+            sb.append("player black: ");
+            if(r.blackUsername() == null) {
+                sb.append("none\n");
+            }
+            else {
+                sb.append(String.format("%s\n", r.blackUsername()));
+            }
+            sb.append(r.game().getBoard().toString());
+            sb.append('\n');
+        }
+        System.out.println(sb.toString());
     }
 
     private String[] formattedBoard(ChessGame game) {
