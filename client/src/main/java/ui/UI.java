@@ -17,6 +17,8 @@ public class UI {
     private static boolean isLoggedIn = false;
     private static boolean quit = false;
     private static final HashMap<String, ChessGameRecord> gamesMap = new HashMap<String, ChessGameRecord>();
+    private static final HashMap<String, Integer> indexMap = new HashMap<String, Integer>();
+    private static int listIndex = 1;
 
     private static final String WHITE_TILE = "43m";
     private static final String BLACK_TILE = "45m";
@@ -28,10 +30,6 @@ public class UI {
     private static String BLACK_ON_BLACK;
 
     public static void run(String url) {
-        //WHITE_ON_BLACK = "\033[" + WHITE_PIECE + BLACK_TILE + "m%c";
-        //BLACK_ON_BLACK = "\033[" + BLACK_PIECE + BLACK_TILE + "m%c";
-        //WHITE_ON_WHITE = "\033[" + WHITE_PIECE + WHITE_TILE + "m%c";
-        //BLACK_ON_WHITE = "\033[" + BLACK_PIECE + WHITE_TILE + "m%c";
         header = "[Logged out]$ "; 
         facade = new ServerFacade(url);
         s = new Scanner(System.in);
@@ -178,11 +176,12 @@ public class UI {
     private static void postLog() throws Exception {
         String input[];
 
+        updateGameList();
         System.out.print(header);
         input = s.nextLine().split(" ");
         if(input.length == 0) {
             System.out.println("Invalid command");
-            drawPreLog();
+            drawPostLog();
             return;
         }
 
@@ -199,16 +198,26 @@ public class UI {
 
             case "list":
                 updateGameList();
+                printGameList();
                 return;
             case "join":
                 return;
             case "logout":
+                facade.logout(authToken);
+                authToken = "";
+                isLoggedIn = false;
+                header = "[Logged out]$ "; 
                 return;
             case "quit":
+                System.out.println("Bye-bye");
+                quit = true;
                 return;
             case "help":
+                drawPostLog();
                 return;
             default:
+                System.out.println("Invalid command");
+                drawPostLog();
                 return;
         }
     }
@@ -218,6 +227,9 @@ public class UI {
         ArrayList<String> keysFromDB = new ArrayList<String>();
 
         for(ChessGameRecord r : gameList) {
+            if(indexMap.get(r.gameID()) == null) {
+                indexMap.put(r.gameID(), listIndex++);
+            }
             gamesMap.put(r.gameID(), r);
             keysFromDB.add(r.gameID());
         }
@@ -231,11 +243,10 @@ public class UI {
 
     private static void printGameList() {
         StringBuilder sb = new StringBuilder();
-        int i = 1;
 
         for(ChessGameRecord r : gamesMap.values()) {
             sb.append("++++++++++++++++\n");
-            sb.append(i++);
+            sb.append(indexMap.get(r.gameID()));
             sb.append(String.format("Game name: %s\n", r.gameName()));
             sb.append("Current turn: ");
             if(r.game().getTeamTurn() == ChessGame.TeamColor.WHITE) {
@@ -306,6 +317,8 @@ public class UI {
                 sb.append(bucketPiece);
                 sb.append(bucketTile);
                 sb.append(bucketChar);
+
+                whitetile ^= true;
             }
             sb.append("\033[0m\n");
             board[i] = sb.toString();
