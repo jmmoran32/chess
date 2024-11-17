@@ -12,7 +12,6 @@ public class AuthData {
         this.id = nextID++; 
     }
 
-    public String authToken() {return this.authToken;}
     public String username() {return this.username;}
 
     @Override

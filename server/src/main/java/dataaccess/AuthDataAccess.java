@@ -80,14 +80,4 @@ public class AuthDataAccess extends SQLDataAccess {
         String truncate = "TRUNCATE TABLE AUTH_DATA";
         executeUpdateStatement(truncate);
     }
-
-    public static String dumpTable() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
-        for(dbobjects.AuthData record : TABLE) {
-            sb.append(record.toString());
-        }
-        sb.append("]");
-        return sb.toString();
-    }
 }

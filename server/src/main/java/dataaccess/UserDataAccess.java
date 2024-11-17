@@ -77,30 +77,6 @@ public class UserDataAccess extends SQLDataAccess {
         UserDataAccess.TABLE.clear();
     }
 
-    private static String dumpTable() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
-        for(dbobjects.UserData record : TABLE) {
-            sb.append(record.toString());
-        }
-        sb.append("]");
-        return sb.toString();
-    }
-
-    private static void loadTable() {
-        ResultSet result;
-        String getString = "SELECT * FROM USER_DATA";
-        try(PreparedStatement selectStatement = CONN.prepareStatement(getString)) {
-            result = selectStatement.executeQuery();
-            while(result.next()) {
-                TABLE.add(new dbobjects.UserData(result.getString(1), result.getString(2), result.getString(3)));
-            }
-        }
-        catch(SQLException e) {
-            throw new RuntimeException("There was a problem loading the memory implementation of USER_DATA: " + e.getMessage());
-        }
-    }
-
     private static String hashPass(String pass) {
         return BCrypt.hashpw(pass.toString(), BCrypt.gensalt(7));
     }

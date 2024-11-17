@@ -1,4 +1,4 @@
-package facade;
+package io;
 
 public class JoinRequest {
     public String playerColor;

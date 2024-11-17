@@ -11,7 +11,7 @@ public class Game {
     private static boolean quit = false;
     private static ChessGame game;
     private static ChessGame.TeamColor color;
-    public static final Scanner s = new Scanner(System.in);
+    public static Scanner s = new Scanner(System.in);
 
     public static void playGame(ChessGame game, ChessGame.TeamColor playerColor) {
         Game.game = game;

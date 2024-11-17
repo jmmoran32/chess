@@ -144,24 +144,6 @@ public class GameDataAccess extends SQLDataAccess {
         }
     }
 
-    private static void loadTable() {
-        ResultSet result;
-        String getString = "SELECT * FROM GAME_DATA";
-        try(PreparedStatement selectStatement = CONN.prepareStatement(getString)) {
-            result = selectStatement.executeQuery();
-            ChessGame game;
-            while(result.next()) {
-                String gameString = result.getString(4);
-                game = chess.ChessGame.deSerialize(gameString);
-                TABLE.add(new dbobjects.GameData(result.getInt(0), result.getString(1), game));
-            }
-        }
-        catch(SQLException e) {
-            throw new RuntimeException("There was a problem loading the memory implementation of USER_DATA: " + e.getMessage());
-        }
-    }
-
-
     public static void clearGameData() throws SQLException {
         GameDataAccess.TABLE.clear();
         String truncateStatement = "TRUNCATE GAME_DATA;";

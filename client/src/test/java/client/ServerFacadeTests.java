@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import chess.ChessGame;
 
 public class ServerFacadeTests {
-    private static final String url = "http://localhost:";
+    private static final String URL = "http://localhost:";
     private static Server server;
     private static ServerFacade facade;
     private static String goodUser[] = {"Charlie", "1234", "c.e.com"};
@@ -24,7 +24,7 @@ public class ServerFacadeTests {
         server = new Server();
         var port = server.run(0);
         System.out.println("Started test HTTP server on " + port);
-        facade = new ServerFacade(url + port);
+        facade = new ServerFacade(URL + port);
     }
 
     @AfterAll

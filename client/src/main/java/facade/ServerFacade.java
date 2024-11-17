@@ -1,6 +1,7 @@
 package facade;
 
 import com.google.gson.Gson;
+import io.*;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
@@ -35,13 +36,6 @@ public class ServerFacade {
         ListRequest req = new ListRequest();
         ListGameResponse res = makeRequest("GET", "/game", req, ListGameResponse.class, authToken);
 
-        /*
-        ArrayList<ChessGame> arr = new ArrayList<ChessGame>();;
-        for(ChessGameRecord r : res.games()) {
-            arr.add(r.game());
-        }
-        return arr;
-        */
         ArrayList<ChessGameRecord> arr = new ArrayList<ChessGameRecord>();
         arr = res.games();
         return arr;

@@ -16,8 +16,7 @@ public class UI {
     private static Scanner s;
     private static boolean isLoggedIn = false;
     private static boolean quit = false;
-    private static final ConcurrentHashMap<String, ChessGameRecord> gamesMap = new ConcurrentHashMap<String, ChessGameRecord>();
-    //private static final ConcurrentHashMap<String, String> indexMap = new ConcurrentHashMap<String, String>();
+    private static final ConcurrentHashMap<String, ChessGameRecord> GAMES_MAP = new ConcurrentHashMap<String, ChessGameRecord>();
     private static int listIndex = 1;
 
 
@@ -212,7 +211,7 @@ public class UI {
                 }
 
                 String index = input [1];
-                ChessGameRecord r = gamesMap.get(index);
+                ChessGameRecord r = GAMES_MAP.get(index);
                 if(r == null) {
                     System.out.println("Invalid game id. type 'list' to see available options");
                     return;
@@ -233,7 +232,7 @@ public class UI {
                 }
 
                 String specIndex = input[1];
-                ChessGameRecord specR = gamesMap.get(specIndex);
+                ChessGameRecord specR = GAMES_MAP.get(specIndex);
                 if(specR == null) {
                     System.out.println("Invalid game id. type 'list' to see available options");
                     return;
@@ -264,60 +263,43 @@ public class UI {
 
     private static void updateGameList() throws Exception {
         ArrayList<ChessGameRecord> gameList = facade.listGames(authToken);
-
-        /*
-        for(ChessGameRecord r : gameList) {
-            if(!indexMap.values().contains(r.gameID())) {
-                indexMap.put(Integer.toString(listIndex++), r.gameID());
-            }
-            gamesMap.put(r.gameID(), r);
-            keysFromDB.add(r.gameID());
-        }
-
-        for(String i : gamesMap.keySet()) {
-            if(!keysFromDB.contains(i)) {
-                gamesMap.remove(i);
-            }
-        }
-        */
-
         for(ChessGameRecord r : gameList) {
             String retrievedIndex = gamesMapContains(r.gameID());;
             if(retrievedIndex != null) {
-                gamesMap.put(retrievedIndex, r);
+                GAMES_MAP.put(retrievedIndex, r);
             }
             else {
-                gamesMap.put(Integer.toString(listIndex++), r);
+                GAMES_MAP.put(Integer.toString(listIndex++), r);
             }
         }
 
         ArrayList<String> toBeRemoved = new ArrayList<String>();
-        for(String i : gamesMap.keySet()) {
+        for(String i : GAMES_MAP.keySet()) {
             if(!gameListContainsID(gameList, i)) {
                 toBeRemoved.add(i);
             }
         }
 
         for(String i : toBeRemoved) {
-            gamesMap.remove(i);
+            GAMES_MAP.remove(i);
         }
     }
 
     private static boolean gameListContainsID(ArrayList<ChessGameRecord> gameList, String key) {
-        String ID = gamesMap.get(key).gameID();
+        String stupidId = GAMES_MAP.get(key).gameID();
         for(ChessGameRecord r : gameList) {
-            if(r.gameID().equals(ID)) {
+            if(r.gameID().equals(stupidId)) {
                 return true;
             }
         }
         return false;
     }
 
-    private static String gamesMapContains(String ID) {
+    private static String gamesMapContains(String stupidId) {
         ChessGameRecord r;
-        for(String i : gamesMap.keySet()) {
-            r = gamesMap.get(i);
-            if(r.gameID().equals(ID)) {
+        for(String i : GAMES_MAP.keySet()) {
+            r = GAMES_MAP.get(i);
+            if(r.gameID().equals(stupidId)) {
                 return i;
             }
         }
@@ -328,8 +310,8 @@ public class UI {
     private static void printGameList() {
         StringBuilder sb = new StringBuilder();
 
-        for(String i : gamesMap.keySet()) {
-            ChessGameRecord r = gamesMap.get(i);
+        for(String i : GAMES_MAP.keySet()) {
+            ChessGameRecord r = GAMES_MAP.get(i);
             sb.append("++++++++++++++++\n");
             sb.append(i);
             sb.append(String.format("\nGame name: %s\n", r.gameName()));
