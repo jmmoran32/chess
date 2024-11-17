@@ -3,7 +3,7 @@ package ui;
 import java.util.Scanner;
 import facade.ServerFacade;
 import facade.ResponseException;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import chess.ChessGame;
 import java.util.ArrayList;
 import facade.ChessGameRecord;
@@ -16,8 +16,8 @@ public class UI {
     private static Scanner s;
     private static boolean isLoggedIn = false;
     private static boolean quit = false;
-    private static final HashMap<String, ChessGameRecord> gamesMap = new HashMap<String, ChessGameRecord>();
-    private static final HashMap<String, Integer> indexMap = new HashMap<String, Integer>();
+    private static final ConcurrentHashMap<String, ChessGameRecord> gamesMap = new ConcurrentHashMap<String, ChessGameRecord>();
+    //private static final ConcurrentHashMap<String, String> indexMap = new ConcurrentHashMap<String, String>();
     private static int listIndex = 1;
 
 
@@ -66,16 +66,18 @@ public class UI {
                     return true;
             }
         }
-        System.out.println("An unknonwn error occurred.");
+        System.out.println("An uncaught error occurred.");
+        System.out.println(e.getMessage());
+        System.out.println("Remember to delete that dump");
         return true;
     }
 
     private static void drawPreLog() {
         StringBuilder sb = new StringBuilder();
-        sb.append("register <username> <password> <email>\n");
+        sb.append("\nregister <username> <password> <email>\n");
         sb.append("login <username> <password>\n");
         sb.append("quit\n");
-        sb.append("help");
+        sb.append("help\n");
         System.out.println(sb.toString());
     }
 
@@ -135,7 +137,6 @@ public class UI {
 
                 isLoggedIn = true;
                 System.out.println("Successfully logged in");
-                drawPostLog();
                 return;
 
             case "quit":
@@ -155,12 +156,12 @@ public class UI {
 
     private static void drawPostLog() {
         StringBuilder sb = new StringBuilder();
-        sb.append("create <name>\n");
+        sb.append("\ncreate <name>\n");
         sb.append("list\n");
-        sb.append("join <id>\n");
+        sb.append("join <id> <team>\n");
         sb.append("logout\n");
         sb.append("quit\n");
-        sb.append("help");
+        sb.append("\nhelp");
         System.out.println(sb.toString());
         return;
     }
@@ -198,10 +199,10 @@ public class UI {
                     drawPostLog();
                 }
                 ChessGame.TeamColor color;
-                if(input[1].equalsIgnoreCase("white")) {
+                if(input[2].equalsIgnoreCase("white")) {
                     color = ChessGame.TeamColor.WHITE;
                 }
-                else if(input[1].equalsIgnoreCase("black")) {
+                else if(input[2].equalsIgnoreCase("black")) {
                     color = ChessGame.TeamColor.BLACK;
                 }
                 else {
@@ -209,12 +210,8 @@ public class UI {
                     return;
                 }
 
-                Integer gameIDInt = indexMap.get(input[2]);
-                if(gameIDInt == null) {
-                    System.out.println("Invalid game id. type 'list' to see available options");
-                    return;
-                }
-                ChessGameRecord r = gamesMap.get(gameIDInt.toString());
+                String index = input [1];
+                ChessGameRecord r = gamesMap.get(index);
                 if(r == null) {
                     System.out.println("Invalid game id. type 'list' to see available options");
                     return;
@@ -251,11 +248,11 @@ public class UI {
 
     private static void updateGameList() throws Exception {
         ArrayList<ChessGameRecord> gameList = facade.listGames(authToken);
-        ArrayList<String> keysFromDB = new ArrayList<String>();
 
+        /*
         for(ChessGameRecord r : gameList) {
-            if(indexMap.get(r.gameID()) == null) {
-                indexMap.put(r.gameID(), listIndex++);
+            if(!indexMap.values().contains(r.gameID())) {
+                indexMap.put(Integer.toString(listIndex++), r.gameID());
             }
             gamesMap.put(r.gameID(), r);
             keysFromDB.add(r.gameID());
@@ -266,15 +263,59 @@ public class UI {
                 gamesMap.remove(i);
             }
         }
+        */
+
+        for(ChessGameRecord r : gameList) {
+            String retrievedIndex = gamesMapContains(r.gameID());;
+            if(retrievedIndex != null) {
+                gamesMap.put(retrievedIndex, r);
+            }
+            else {
+                gamesMap.put(Integer.toString(listIndex++), r);
+            }
+        }
+
+        ArrayList<String> toBeRemoved = new ArrayList<String>();
+        for(String i : gamesMap.keySet()) {
+            if(!gameListContainsID(gameList, i)) {
+                toBeRemoved.add(i);
+            }
+        }
+
+        for(String i : toBeRemoved) {
+            gamesMap.remove(i);
+        }
     }
+
+    private static boolean gameListContainsID(ArrayList<ChessGameRecord> gameList, String ID) {
+        for(ChessGameRecord r : gameList) {
+            if(r.gameID().equals(ID)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String gamesMapContains(String ID) {
+        ChessGameRecord r;
+        for(String i : gamesMap.keySet()) {
+            r = gamesMap.get(i);
+            if(r.gameID().equals(ID)) {
+                return i;
+            }
+        }
+        return null;
+    }
+
 
     private static void printGameList() {
         StringBuilder sb = new StringBuilder();
 
-        for(ChessGameRecord r : gamesMap.values()) {
+        for(String i : gamesMap.keySet()) {
+            ChessGameRecord r = gamesMap.get(i);
             sb.append("++++++++++++++++\n");
-            sb.append(indexMap.get(r.gameID()));
-            sb.append(String.format("Game name: %s\n", r.gameName()));
+            sb.append(i);
+            sb.append(String.format("\nGame name: %s\n", r.gameName()));
             sb.append("Current turn: ");
             if(r.game().getTeamTurn() == ChessGame.TeamColor.WHITE) {
                 sb.append("white\n");

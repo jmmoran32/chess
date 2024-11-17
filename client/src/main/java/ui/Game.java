@@ -19,6 +19,8 @@ public class Game {
         while(!quit) {
             takeTurn();
         }
+        quit = false;
+        return;
     }
 
     private static void takeTurn() {
