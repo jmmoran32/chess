@@ -20,7 +20,7 @@ public class ServerFacadeTests {
 
     @BeforeAll
     public static void init() throws Exception {
-        clearDB();
+        clearTheDB();
         server = new Server();
         var port = server.run(0);
         System.out.println("Started test HTTP server on " + port);
@@ -34,7 +34,7 @@ public class ServerFacadeTests {
 
     @AfterEach
     void cleanup() throws Exception {
-        clearDB();
+        clearTheDB();
     }
 
     @Test
@@ -42,8 +42,8 @@ public class ServerFacadeTests {
     public void registerGood() {
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
-            Assertions.assertTrue(findAuth(authToken));
-            Assertions.assertTrue(findGoodUser());
+            Assertions.assertTrue(findThisAuth(authToken));
+            Assertions.assertTrue(findTheGoodUser());
         }
         catch(Exception e) {
             Assertions.fail("An exception was thrown when registering good user");
@@ -72,7 +72,7 @@ public class ServerFacadeTests {
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
             String newAuth = facade.login(goodUser[0], goodUser[1]);
-            Assertions.assertTrue(findAuth(newAuth));
+            Assertions.assertTrue(findThisAuth(newAuth));
         }
         catch(Exception e) {
             Assertions.fail("An exception was thrown when loggin in good user");
@@ -102,7 +102,7 @@ public class ServerFacadeTests {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
             newAuth = facade.login(goodUser[0], goodUser[1]);
             facade.logout(newAuth);
-            Assertions.assertFalse(findAuth(newAuth));
+            Assertions.assertFalse(findThisAuth(newAuth));
         }
         catch(Exception e) {
             Assertions.fail("An exception was thrown when logging out good user");
@@ -135,7 +135,7 @@ public class ServerFacadeTests {
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
             newAuth = facade.login(goodUser[0], goodUser[1]);
-            Assertions.assertTrue(findAuth(newAuth));
+            Assertions.assertTrue(findThisAuth(newAuth));
             gameID = facade.createGame(newAuth, "Good Game");
             Assertions.assertTrue(true);
         }
@@ -152,7 +152,7 @@ public class ServerFacadeTests {
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
             newAuth = facade.login(goodUser[0], goodUser[1]);
-            Assertions.assertTrue(findAuth(newAuth));
+            Assertions.assertTrue(findThisAuth(newAuth));
             gameID = facade.createGame("asdf", "Good Game");
             Assertions.fail("No exception was thrown");
         }
@@ -171,7 +171,7 @@ public class ServerFacadeTests {
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
             newAuth = facade.login(goodUser[0], goodUser[1]);
-            Assertions.assertTrue(findAuth(newAuth));
+            Assertions.assertTrue(findThisAuth(newAuth));
             facade.createGame(newAuth, game1);
             facade.createGame(newAuth, game2);
             facade.createGame(newAuth, game3);
@@ -190,7 +190,7 @@ public class ServerFacadeTests {
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
             newAuth = facade.login(goodUser[0], goodUser[1]);
-            Assertions.assertTrue(findAuth(newAuth));
+            Assertions.assertTrue(findThisAuth(newAuth));
             facade.createGame(newAuth, game1);
             facade.createGame(newAuth, game2);
             facade.createGame(newAuth, game3);
@@ -214,7 +214,7 @@ public class ServerFacadeTests {
         try {
             String authToken = facade.registration(goodUser[0], goodUser[1], goodUser[2]);
             newAuth = facade.login(goodUser[0], goodUser[1]);
-            Assertions.assertTrue(findAuth(newAuth));
+            Assertions.assertTrue(findThisAuth(newAuth));
             gameID = facade.createGame(newAuth, "Good Game");
             Assertions.assertTrue(facade.joinGame(newAuth, ChessGame.TeamColor.WHITE, gameID));
             Assertions.assertTrue(checkJoined(goodUser[0], ChessGame.TeamColor.WHITE, gameID));
@@ -323,35 +323,37 @@ public class ServerFacadeTests {
         return empty1 && empty2 && empty3;
     }
 
-    private boolean findAuth(String auth) throws Exception {
+    private boolean findThisAuth(String auth) throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT *\n");
         sb.append("FROM AUTH_DATA\n");
         sb.append("WHERE AUTH_TOKEN = ?");
 
-        try(PreparedStatement getStatement = SQLDataAccess.CONN.prepareStatement(sb.toString())) {
-            getStatement.setString(1, auth);
-            ResultSet result = getStatement.executeQuery();
+        try(PreparedStatement getAuthStatement = SQLDataAccess.CONN.prepareStatement(sb.toString())) {
+            getAuthStatement.setString(1, auth);
+            ResultSet result = getAuthStatement.executeQuery();
 
             if(!result.isBeforeFirst()) {
                 return false;
             }
             return true;
         }
+
         catch(Exception e) {
             throw e;
         }
     }
 
-    private static boolean findGoodUser() throws Exception {
+    private static boolean findTheGoodUser() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT *\n");
         sb.append("FROM USER_DATA\n");
+
         sb.append("WHERE USERNAME = 'Charlie'\n");
         sb.append("AND EMAIL  = 'c.e.com';");
 
-        try(PreparedStatement getStatement = SQLDataAccess.CONN.prepareStatement(sb.toString())) {
-            ResultSet result = getStatement.executeQuery();
+        try(PreparedStatement getTheStatement = SQLDataAccess.CONN.prepareStatement(sb.toString())) {
+            ResultSet result = getTheStatement.executeQuery();
             if(!result.next()) {
                 return false;
             }
@@ -360,29 +362,29 @@ public class ServerFacadeTests {
             }
         }
         catch(Exception e) {
-            throw new Exception("Test issue: couldn't find good user: " + e.getMessage());
+            throw new Exception("couldn't find good user: " + e.getMessage());
         }
     }
 
-    private static void clearDB() throws Exception {
-        String truncate = "TRUNCATE TABLE USER_DATA";
-        try(PreparedStatement statement = SQLDataAccess.CONN.prepareStatement(truncate)) {
+    private static void clearTheDB() throws Exception {
+        String truncateStatement = "TRUNCATE TABLE USER_DATA";
+        try(PreparedStatement statement = SQLDataAccess.CONN.prepareStatement(truncateStatement)) {
             statement.executeUpdate();
         }
         catch(Exception e) {
-            throw new Exception("Unable to clearDB after a test: " + e.getMessage());
+            throw new Exception("There was a problem clearing the db " + e.getMessage());
         }
         
-        truncate = "TRUNCATE TABLE GAME_DATA";
-        try(PreparedStatement statement = SQLDataAccess.CONN.prepareStatement(truncate)) {
+        truncateStatement = "TRUNCATE TABLE GAME_DATA";
+        try(PreparedStatement statement = SQLDataAccess.CONN.prepareStatement(truncateStatement)) {
             statement.executeUpdate();
         }
         catch(Exception e) {
             throw new Exception("Unable to clearDB after a test: " + e.getMessage());
         }
 
-        truncate = "TRUNCATE TABLE AUTH_DATA";
-        try(PreparedStatement statement = SQLDataAccess.CONN.prepareStatement(truncate)) {
+        truncateStatement = "TRUNCATE TABLE AUTH_DATA";
+        try(PreparedStatement statement = SQLDataAccess.CONN.prepareStatement(truncateStatement)) {
             statement.executeUpdate();
         }
         catch(Exception e) {
