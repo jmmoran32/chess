@@ -23,6 +23,16 @@ public class Game {
         return;
     }
 
+    public static void spectate(ChessGame game) {
+        Game.game = game;
+        Game.color = ChessGame.TeamColor.WHITE;
+        while(!quit) {
+            awaitTurn();
+        }
+        quit = false;
+        return;
+    }
+
     private static void takeTurn() {
         String team;
         if(color == ChessGame.TeamColor.WHITE) {
@@ -33,6 +43,14 @@ public class Game {
         }
         drawBoard();
         System.out.print(team);
+        System.out.print("This part of the game has not been implemented yet. Press any key to exit: ");
+        s.nextLine();
+        quit = true;
+        return;
+    }
+
+    private static void awaitTurn() {
+        drawBoard();
         System.out.print("This part of the game has not been implemented yet. Press any key to exit: ");
         s.nextLine();
         quit = true;

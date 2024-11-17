@@ -159,6 +159,7 @@ public class UI {
         sb.append("\ncreate <name>\n");
         sb.append("list\n");
         sb.append("join <id> <team>\n");
+        sb.append("spectate <id>\n");
         sb.append("logout\n");
         sb.append("quit\n");
         sb.append("\nhelp");
@@ -225,6 +226,21 @@ public class UI {
                 }
 
                 return;
+            case "spectate":
+                if(input.length < 2) {
+                    System.out.println("Invalid command");
+                    drawPostLog();
+                }
+
+                String specIndex = input[1];
+                ChessGameRecord specR = gamesMap.get(specIndex);
+                if(specR == null) {
+                    System.out.println("Invalid game id. type 'list' to see available options");
+                    return;
+                }
+
+                Game.spectate(specR.game());
+                return;
             case "logout":
                 facade.logout(authToken);
                 authToken = "";
@@ -287,7 +303,8 @@ public class UI {
         }
     }
 
-    private static boolean gameListContainsID(ArrayList<ChessGameRecord> gameList, String ID) {
+    private static boolean gameListContainsID(ArrayList<ChessGameRecord> gameList, String key) {
+        String ID = gamesMap.get(key).gameID();
         for(ChessGameRecord r : gameList) {
             if(r.gameID().equals(ID)) {
                 return true;
