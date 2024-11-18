@@ -96,22 +96,29 @@ public class UI {
                 if(input.length < 4) {
                     System.out.println("Invalid command");
                     drawPreLog();
+                    return;
                 }
                 String username = input[1];
                 String password = input[2];
                 String email = input[3];
-                if(facade.registration(username, password, email) == null) {
+                String regAuthToken = facade.registration(username, password, email);
+                if(regAuthToken == null) {
                     System.out.println("Invalid command");
                     drawPreLog();
                     return;
                 }
                 System.out.println("Registration Successful");
+                UI.authToken = regAuthToken;
+                UI.isLoggedIn = true;
+                header = "[" + username + "]$ ";
+
                 return;
 
             case "login":
                 if(input.length < 3) {
                     System.out.println("Invalid command");
                     drawPreLog();
+                    return;
                 }
                 String usernameL = input[1];
                 String passwordL = input[2];
@@ -183,6 +190,7 @@ public class UI {
                 if(input.length < 2) {
                     System.out.println("Invalid command");
                     drawPostLog();
+                    return;
                 }
                 String gameName = input[1];
                 String newGameID = facade.createGame(authToken, gameName);
@@ -197,6 +205,7 @@ public class UI {
                 if(input.length < 3) {
                     System.out.println("Invalid command");
                     drawPostLog();
+                    return;
                 }
                 ChessGame.TeamColor color;
                 if(input[2].equalsIgnoreCase("white")) {
@@ -229,6 +238,7 @@ public class UI {
                 if(input.length < 2) {
                     System.out.println("Invalid command");
                     drawPostLog();
+                    return;
                 }
 
                 String specIndex = input[1];
