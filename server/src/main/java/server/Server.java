@@ -10,10 +10,12 @@ import java.util.ArrayList;
 import java.sql.SQLException;
 
 public class Server {
+    private static WebSocketHandler ws;
 
     public int run(int desiredPort) {
         Spark.port(desiredPort);
 
+        Spark.webSocket("/ws", WebSocketHandler.class);
         Spark.staticFiles.location("web");
 
         // Register your endpoints and handle exceptions here.

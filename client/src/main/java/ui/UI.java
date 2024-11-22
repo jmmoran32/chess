@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import chess.ChessGame;
 import java.util.ArrayList;
 import facade.ChessGameRecord;
+import ws.WebSocketFacade;
 
 public class UI {
     private static String header;
@@ -18,9 +19,16 @@ public class UI {
     private static boolean quit = false;
     private static final ConcurrentHashMap<String, ChessGameRecord> GAMES_MAP = new ConcurrentHashMap<String, ChessGameRecord>();
     private static int listIndex = 1;
+    private static WebSocketFacade WS;
 
 
     public static void run(String url) {
+        try {
+            WS = new WebSocketFacade("ws://localhost:8080/ws");
+        }
+        catch (Exception e) {
+            System.out.println("Could not initialize websocket");
+        }
         header = "[Logged out]$ "; 
         facade = new ServerFacade(url);
         s = new Scanner(System.in);
@@ -92,6 +100,14 @@ public class UI {
             }
 
         switch(input[0]) {
+            case "echo":
+                if(input.length < 2) {
+                    return;
+                }
+                //in future, serialize output to json and send that to ws
+                WS.echo(input[1]);
+                return;
+
             case "register":
                 if(input.length < 4) {
                     System.out.println("Invalid command");
