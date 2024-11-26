@@ -144,6 +144,32 @@ public class GameDataAccess extends SQLDataAccess {
         }
     }
 
+    public static boolean LeaveGame(chess.ChessGame.TeamColor color, int gameID) throws SQLException {
+        dbobjects.GameData record = GameDataAccess.getGameObject(gameID);
+        if(record == null) {
+            return false;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("UPDATE GAME_DATA\n");
+
+        if(color == chess.ChessGame.TeamColor.BLACK){
+            sb.append("SET BLACK_USERNAME = NULL\n");
+        }
+        else {
+            sb.append("SET WHITE_USERNAME = NULL\n");
+        }
+        sb.append("\nWHERE GAME_ID = " + gameID + ";");
+
+        try(PreparedStatement updateStatement = CONN.prepareStatement(sb.toString())) {
+            updateStatement.executeUpdate();
+            return true;
+        }
+        catch(SQLException e) {
+            throw new SQLException("There was a problem removing a user from game: " + e.getMessage());
+        }
+    }
+
     public static boolean updateGame(int gameID, String newGame) throws SQLException {
         dbobjects.GameData record = GameDataAccess.getGameObject(gameID);
         if(record == null) {
@@ -165,6 +191,7 @@ public class GameDataAccess extends SQLDataAccess {
             throw new SQLException("There was a problem updating the game: " + e.getMessage());
         }
     }
+
 
     public static void clearGameData() throws SQLException {
         GameDataAccess.TABLE.clear();

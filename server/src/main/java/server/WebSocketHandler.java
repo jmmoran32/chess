@@ -108,6 +108,42 @@ public class WebSocketHandler {
     }
 
     private void leave(Session session, UserGameCommand command) {
+        int gameID = command.getGameID();
+        HashSet<Session> sessions = GAMES.get(gameID);
+        if(sessions == null) {
+            throw new WebSocketException("No sessions were found associated with gameID: " + gameID);
+        }
+
+        if(!sessions.remove(session)) {
+            throw new WebSocketException("The player cannot leave a game they haven't joined");
+        }
+
+        String playerName = dataaccess.AuthDataAccess.getUsername(command.getAuthToken());
+        if(playerName == null) {
+            throw new WebSocketException("Unable to find player name associated with token: " + command.getAuthToken());
+        }
+        
+        int team = command.getTeam();
+        chess.ChessGame.TeamColor color;
+
+        if(team > 0) {
+            color = chess.ChessGame.TeamColor.WHITE;
+        }
+        else if(team < 0) {
+            String message = String.format("Player %s has left spectating", playerName);
+            broadcast(gameID, message);
+            return;
+        }
+        else {
+            color = chess.ChessGame.TeamColor.BLACK;
+        }
+
+        if(!dataaccess.GameDataAccess.LeaveGame(color, gameID)) {
+            throw new WebSocketException("couldn't find a game associated with: " + gameID);
+        }
+
+        String message = String.format("Player %s has left the game", playerName);
+        broadcast(gameID, message);
     }
 
     private void broadcast(int gameID, String message) {
