@@ -144,6 +144,28 @@ public class GameDataAccess extends SQLDataAccess {
         }
     }
 
+    public static boolean updateGame(int gameID, String newGame) throws SQLException {
+        dbobjects.GameData record = GameDataAccess.getGameObject(gameID);
+        if(record == null) {
+            return false;
+        }
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("UPDATE GAME_DATA\n");
+        sb.append("SET GAME = ?\n");
+        sb.append("WHERE GAME_ID = ?;");
+
+        try(PreparedStatement updateStatement = CONN.prepareStatement(sb.toString())) {
+            updateStatement.setString(1, newGame);
+            updateStatement.setInt(2, gameID);
+            updateStatement.executeUpdate();
+            return true;
+        }
+        catch(SQLException e) {
+            throw new SQLException("There was a problem updating the game: " + e.getMessage());
+        }
+    }
+
     public static void clearGameData() throws SQLException {
         GameDataAccess.TABLE.clear();
         String truncateStatement = "TRUNCATE GAME_DATA;";
