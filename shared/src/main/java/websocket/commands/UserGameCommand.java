@@ -16,10 +16,17 @@ public class UserGameCommand {
 
     private final Integer gameID;
 
-    public UserGameCommand(CommandType commandType, String authToken, Integer gameID) {
+    private final String newGame;
+
+    //1 for white, 0 for black, -1 for spectator
+    private final Integer team;
+
+    public UserGameCommand(CommandType commandType, String authToken, Integer gameID, String newGame, int team) {
         this.commandType = commandType;
         this.authToken = authToken;
         this.gameID = gameID;
+        this.newGame = newGame;
+        this.team = team;
     }
 
     public enum CommandType {
@@ -51,12 +58,16 @@ public class UserGameCommand {
         sb.append(this.authToken);
         sb.append('\t');
         sb.append(Integer.toString(this.gameID));
+        sb.append('\t');
+        sb.append(this.newGame);
+        sb.append('\t');
+        sb.append(Integer.toString(this.team));
         return sb.toString();
     }
 
     public static UserGameCommand deSerialize(String serial) {
         String serialArray[] = serial.split("\t");
-        if(serialArray.length < 3) {
+        if(serialArray.length < 5) {
             return null;
         }
 
@@ -78,8 +89,9 @@ public class UserGameCommand {
                 return null;
         }
         
-        return new UserGameCommand(ctype, serialArray[1], Integer.parseInt(serialArray[2]));
+        return new UserGameCommand(ctype, serialArray[1], Integer.parseInt(serialArray[2]), serialArray[3], Integer.parseInt(serialArray[4]));
     }
+
 
     public CommandType getCommandType() {
         return commandType;
@@ -91,6 +103,14 @@ public class UserGameCommand {
 
     public Integer getGameID() {
         return gameID;
+    }
+
+    public String getNewGame() {
+        return this.newGame;
+    }
+
+    public int getTeam() {
+        return this.team;
     }
 
     @Override
