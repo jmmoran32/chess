@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.HashSet;
+import java.sql.SQLException;
 
 @WebSocket
 public class WebSocketHandler {
@@ -44,16 +45,29 @@ public class WebSocketHandler {
     private void parseMessage(Session session, ServerMessage message) {}
 
     private void parseCommand(Session session, UserGameCommand command) {
-        switch(command.getCommandType()) {
-            case CONNECT:
-                joinGame(session, command);
-                break;
-            case MAKE_MOVE:
-                break;
-            case LEAVE:
-                break;
-            case RESIGN:
-                break;
+        try {
+            switch(command.getCommandType()) {
+                case CONNECT:
+                    joinGame(session, command);
+                    break;
+                case MAKE_MOVE:
+                    makeMove(command);
+                    break;
+                case LEAVE:
+                    leave(session, command);
+                    break;
+                case RESIGN:
+                    break;
+                //TODO: should I make another command for plain broadcasts? may use it for check warnings
+            }
+        }
+        catch(WebSocketException e) {
+        }
+        catch(IOException e) {
+        }
+        catch(SQLException e) {
+        }
+        catch(Exception e) {
         }
     }
 
@@ -66,6 +80,9 @@ public class WebSocketHandler {
 
         int team = command.getTeam();
         String playerName = dataaccess.AuthDataAccess.getUsername(command.getAuthToken());
+        if(playerName == null) {
+            throw new WebSocketException("Unable to find player name associated with token: " + command.getAuthToken());
+        }
         String message;
 
         if(team > 0) {  //white
@@ -81,8 +98,26 @@ public class WebSocketHandler {
         broadcast(gameID, message);
     }
 
-    private void broadcast(int gameID, String message) throws IOException {
+    private void makeMove(UserGameCommand command) {
+        int gameID = command.getGameID();
+        String newGame = command.getNewGame();
+        if(!dataaccess.GameDataAccess.updateGame(gameID, newGame)) {
+            throw new WebSocketException("The game in the DB couldn't be updated.");
+        }
+        touchGame(gameID);
+    }
+
+    private void leave(Session session, UserGameCommand command) {
+    }
+
+    private void broadcast(int gameID, String message) {
         //TODO: make this send a notification to all players in the given game
+        for(Session s : GAMES.get(gameID)) {
+        }
+    }
+
+    private void touchGame(int gameID) {
+        //TODO: sends a signal to all joined players to update their game
         for(Session s : GAMES.get(gameID)) {
         }
     }
@@ -102,5 +137,10 @@ public class WebSocketHandler {
         }
 
         return command;
+    }
+
+    @SuppressWarnings("serial")
+    private class WebSocketException extends Exception {
+        WebSocketException(String message) {super(message);}
     }
 }
