@@ -41,4 +41,35 @@ public class ServerMessage {
     public int hashCode() {
         return Objects.hash(getServerMessageType());
     }
+
+    public String serialize() {
+        StringBuilder sb = new StringBuilder();
+        switch(this.serverMessageType) {
+            case LOAD_GAME:
+                sb.append("LOAD_GAME");
+                break;
+            case ERROR:
+                sb.append("ERROR");
+                break;
+            case NOTIFICATION:
+                sb.append("NOTIFICATION");
+                break;
+            default:
+                sb.append("UNDEFINED");
+        }
+        return sb.toString();
+    }
+
+    public static ServerMessage deSerialize(String serial) {
+        switch(serial) {
+            case "LOAD_GAME":
+                return new ServerMessage(ServerMessageType.LOAD_GAME);
+            case "ERROR":
+                return new ServerMessage(ServerMessageType.ERROR);
+            case "NOTIFICATION":
+                return new ServerMessage(ServerMessageType.NOTIFICATION);
+            default:
+                return null;
+        }
+    }
 }
