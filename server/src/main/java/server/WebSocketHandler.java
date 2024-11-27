@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.HashSet;
 import java.sql.SQLException;
+import dataaccess.DataAccessException;
 
 @WebSocket
 public class WebSocketHandler {
@@ -57,13 +58,12 @@ public class WebSocketHandler {
                     leave(session, command);
                     break;
                 case RESIGN:
+                    resign(session, command);
                     break;
                 //TODO: should I make another command for plain broadcasts? may use it for check warnings
             }
         }
         catch(WebSocketException e) {
-        }
-        catch(IOException e) {
         }
         catch(SQLException e) {
         }
@@ -71,7 +71,7 @@ public class WebSocketHandler {
         }
     }
 
-    private void joinGame(Session session, UserGameCommand command) {
+    private void joinGame(Session session, UserGameCommand command) throws WebSocketException, SQLException, DataAccessException {
         int gameID = command.getGameID();
         if(!GAMES.containsKey(gameID)) {
             GAMES.put(gameID, new HashSet<Session>());
@@ -98,7 +98,7 @@ public class WebSocketHandler {
         broadcast(gameID, message);
     }
 
-    private void makeMove(UserGameCommand command) {
+    private void makeMove(UserGameCommand command) throws WebSocketException, SQLException, DataAccessException {
         int gameID = command.getGameID();
         String newGame = command.getNewGame();
         if(!dataaccess.GameDataAccess.updateGame(gameID, newGame)) {
@@ -107,7 +107,7 @@ public class WebSocketHandler {
         touchGame(gameID);
     }
 
-    private void leave(Session session, UserGameCommand command) {
+    private void leave(Session session, UserGameCommand command) throws WebSocketException, SQLException, DataAccessException {
         int gameID = command.getGameID();
         HashSet<Session> sessions = GAMES.get(gameID);
         if(sessions == null) {
@@ -144,6 +144,9 @@ public class WebSocketHandler {
 
         String message = String.format("Player %s has left the game", playerName);
         broadcast(gameID, message);
+    }
+
+    private void resign(Session session, UserGameCommand command) {
     }
 
     private void broadcast(int gameID, String message) {

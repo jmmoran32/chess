@@ -100,14 +100,6 @@ public class UI {
             }
 
         switch(input[0]) {
-            case "echo":
-                if(input.length < 2) {
-                    return;
-                }
-                //in future, serialize output to json and send that to ws
-                WS.echo(input[1]);
-                return;
-
             case "register":
                 if(input.length < 4) {
                     System.out.println("Invalid command");

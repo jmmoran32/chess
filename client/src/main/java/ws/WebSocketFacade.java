@@ -26,12 +26,14 @@ public final class WebSocketFacade extends Endpoint {
     }
     */
 
+    /*
     public void echo(String message) {
         try {
             this.session.getBasicRemote().sendText(message);
         }
         catch(IOException e){}
     }
+    */
 
     @Override
     public void onOpen(Session session, EndpointConfig config) {
