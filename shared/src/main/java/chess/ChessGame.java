@@ -12,6 +12,7 @@ import java.util.ArrayList;
 public class ChessGame {
     private boolean whiteTurn;
     private ChessBoard board;
+    private boolean resigned = false;
     private static int iterator = 1;
     private int obid;
     private static final int CLID = 3;
@@ -29,6 +30,9 @@ public class ChessGame {
         if(this.whiteTurn) {
             whiteTurn = 1;
         }
+        else if(this.resigned) {
+            whiteTurn = 2;
+        }
         else {
             whiteTurn = 0;
         }
@@ -45,7 +49,14 @@ public class ChessGame {
         if(whiteTurn == '0') {
             game.setTeamTurn(ChessGame.TeamColor.BLACK);
         }
+        else if(whiteTurn == '2') {
+            game.resign();
+        }
         return game;
+    }
+
+    public void resign() {
+        this.resigned = true;
     }
 
     /**
