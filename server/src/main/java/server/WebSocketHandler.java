@@ -23,7 +23,7 @@ public class WebSocketHandler {
     }
 
     @OnWebSocketMessage
-    public void onMessage(Session session, String message)  throws IOException {
+    public void onMessage(Session session, String message)  throws IOException, WebSocketException, SQLException, DataAccessException {
         Object raw = deSerialize(message);
         if(raw instanceof ServerMessage) {
            parseMessage(session, (ServerMessage) raw); 
@@ -32,6 +32,7 @@ public class WebSocketHandler {
             parseCommand(session, (UserGameCommand) raw);
         }
         else {
+            throw new WebSocketException("Unknown command");
         }
 
 
@@ -45,7 +46,7 @@ public class WebSocketHandler {
 
     private void parseMessage(Session session, ServerMessage message) {}
 
-    private void parseCommand(Session session, UserGameCommand command) {
+    private void parseCommand(Session session, UserGameCommand command) throws WebSocketException, SQLException, DataAccessException {
         try {
             switch(command.getCommandType()) {
                 case CONNECT:
@@ -64,10 +65,13 @@ public class WebSocketHandler {
             }
         }
         catch(WebSocketException e) {
+            throw e;
         }
         catch(SQLException e) {
+            throw e;
         }
         catch(Exception e) {
+            throw e;
         }
     }
 
@@ -146,7 +150,21 @@ public class WebSocketHandler {
         broadcast(gameID, message);
     }
 
-    private void resign(Session session, UserGameCommand command) {
+    private void resign(Session session, UserGameCommand command) throws SQLException, WebSocketException, DataAccessException {
+        int gameID = command.getGameID();
+        String playerName = dataaccess.AuthDataAccess.getUsername(command.getAuthToken());
+        if(playerName == null) {
+            throw new WebSocketException("Unable to find player name associated with token: " + command.getAuthToken());
+        }
+
+        String newGame = command.getNewGame();
+        if(!dataaccess.GameDataAccess.updateGame(gameID, newGame)) {
+            throw new WebSocketException("The game in the DB couldn't be updated.");
+        }
+        touchGame(gameID);
+
+        String message = String.format("Player %s has resigned", playerName);
+        broadcast(gameID, message);
     }
 
     private void broadcast(int gameID, String message) {
