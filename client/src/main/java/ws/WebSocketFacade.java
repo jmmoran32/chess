@@ -41,18 +41,23 @@ public final class WebSocketFacade extends Endpoint {
 
         switch(message.getServerMessageType()) {
             case LOAD_GAME:
+                loadGame(message);
                 break;
             case ERROR:
+                notification(message);
                 break;
             case NOTIFICATION:
+                notification(message);
                 break;
         }
     }
 
-    private void loadGame() {
+    private static void loadGame(ServerMessage message) {
+        ui.Game.touchBoard(message.getGame().serialize());
     }
 
     private void notification(ServerMessage message) {
+        ui.Game.notify(message.getMessage());
     }
 
     private ServerMessage deSerialize(String message) {

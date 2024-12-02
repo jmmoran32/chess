@@ -142,4 +142,17 @@ public class Game {
         }
         return board;
     }
+
+    public static void notify(String message) {
+        System.out.println(message);
+    }
+
+    public static void updateGame(String serial) {
+        Game.game = chess.ChessGame.deSerialize(serial);
+    }
+
+    public static void touchBoard(String serial) {
+        updateGame(serial);
+        drawBoard();
+    }
 }

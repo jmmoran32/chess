@@ -11,6 +11,7 @@ import java.util.Objects;
 public class ServerMessage {
     ServerMessageType serverMessageType;
     String message;
+    chess.ChessGame game;
 
     public enum ServerMessageType {
         LOAD_GAME,
@@ -18,12 +19,20 @@ public class ServerMessage {
         NOTIFICATION
     }
 
-    public ServerMessage(ServerMessageType type) {
+    public ServerMessage(ServerMessageType type, String message, chess.ChessGame game) {
         this.serverMessageType = type;
     }
 
     public ServerMessageType getServerMessageType() {
         return this.serverMessageType;
+    }
+
+    public chess.ChessGame getGame() {
+        return this.game;
+    }
+    
+    public String getMessage() {
+        return this.message;
     }
 
     @Override
@@ -60,17 +69,28 @@ public class ServerMessage {
         }
         sb.append("\t");
         sb.append(this.message);
+        sb.append("\t");
+        if(this.game == null) {
+            sb.append('U');
+        }
+        else {
+            sb.append(this.game.serialize());
+        }
         return sb.toString();
     }
 
     public static ServerMessage deSerialize(String serial) {
-        switch(serial) {
+        String deSerial[] = serial.split("\t");
+        if(deSerial.length != 3) {
+            return null;
+        }
+        switch(deSerial[0]) {
             case "LOAD_GAME":
-                return new ServerMessage(ServerMessageType.LOAD_GAME);
+                return new ServerMessage(ServerMessageType.LOAD_GAME, deSerial[1], chess.ChessGame.deSerialize(deSerial[2]));
             case "ERROR":
-                return new ServerMessage(ServerMessageType.ERROR);
+                return new ServerMessage(ServerMessageType.ERROR, deSerial[1], null);
             case "NOTIFICATION":
-                return new ServerMessage(ServerMessageType.NOTIFICATION);
+                return new ServerMessage(ServerMessageType.NOTIFICATION, deSerial[1], null);
             default:
                 return null;
         }
