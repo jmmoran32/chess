@@ -23,12 +23,6 @@ public class UI {
 
 
     public static void run(String url) {
-        try {
-            WS = new WebSocketFacade("ws://localhost:8080/ws");
-        }
-        catch (Exception e) {
-            System.out.println("Could not initialize websocket");
-        }
         header = "[Logged out]$ "; 
         facade = new ServerFacade(url);
         s = new Scanner(System.in);
@@ -234,7 +228,7 @@ public class UI {
                     return;
                 }
                 if(facade.joinGame(authToken, color, r.gameID())) {
-                    Game.playGame(r.game(), color);
+                    Game.playGame(r.game(), Integer.parseInt(r.gameID()), color, UI.authToken);
                 }
                 else {
                     System.out.println("There was a problem joining the game. This shouldn't happen");

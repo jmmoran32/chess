@@ -21,7 +21,7 @@ public class UserGameCommand {
     //1 for white, 0 for black, -1 for spectator
     private final Integer team;
 
-    public UserGameCommand(CommandType commandType, String authToken, Integer gameID, String newGame, int team) {
+    public UserGameCommand(CommandType commandType, String authToken, Integer gameID, String newGame, Integer team) {
         this.commandType = commandType;
         this.authToken = authToken;
         this.gameID = gameID;

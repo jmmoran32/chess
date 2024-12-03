@@ -20,6 +20,7 @@ public final class WebSocketFacade extends Endpoint {
         WebSocketContainer container = ContainerProvider.getWebSocketContainer();
         this.session = container.connectToServer(this, uri);
         this.session.addMessageHandler(new MessageHandler.Whole<String>() {
+            @Override
             public void onMessage(String message) {
                 try {
                     parseMessage(message);
@@ -31,6 +32,10 @@ public final class WebSocketFacade extends Endpoint {
                 //System.out.println(message);
             }
         });
+    }
+    
+    public void sendCommand(UserGameCommand command) {
+        this.session.getBasicRemote().sendText(command.serialize());
     }
 
     private void parseMessage(String input) throws WebSocketException {
