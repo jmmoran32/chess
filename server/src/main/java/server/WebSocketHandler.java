@@ -12,22 +12,23 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.HashSet;
 import java.sql.SQLException;
 import dataaccess.DataAccessException;
+import chess.ChessGame;
 
 @WebSocket
 public class WebSocketHandler {
     private static final String USER_COMMANDS[] = {"CONNECT", "MAKE_MOVE", "LEAVE", "RESIGN"};
     private static final ConcurrentHashMap<Integer, HashSet<Session>> GAMES = new ConcurrentHashMap<Integer, HashSet<Session>>();
+    private static final ConcurrentHashMap<Session, ChessGame.TeamColor> COLORS = new ConcurrentHashMap<Session, ChessGame.TeamColor>();
+    private static final ConcurrentHashMap<Session, String> AUTHS = new ConcurrentHashMap<Session, String>();
 
     public WebSocketHandler() {
     }
 
     @OnWebSocketMessage
     public void onMessage(Session session, String message)  throws IOException, WebSocketException, SQLException, DataAccessException {
+        trimSessions();
         Object raw = deSerialize(message);
-        if(raw instanceof ServerMessage) {
-           parseMessage(session, (ServerMessage) raw); 
-        }
-        else if(raw instanceof UserGameCommand) {
+        if(raw instanceof UserGameCommand) {
             parseCommand(session, (UserGameCommand) raw);
         }
         else {
@@ -43,9 +44,29 @@ public class WebSocketHandler {
         */
     }
 
-    private void parseMessage(Session session, ServerMessage message) {}
+    private void trimSessions() {
+        String playerName;
+        for(Integer i : GAMES.keySet()) {
+            for(Session s : GAMES.get(i)) {
+                if(!s.isOpen()) {
+                    try {
+                        playerName = dataaccess.AuthDataAccess.getUsername(AUTHS.get(s));
+                        dataaccess.GameDataAccess.LeaveGame(COLORS.get(s), i);
+                        AUTHS.remove(s);
+                        COLORS.remove(s);
+                        GAMES.get(i).remove(s);
+                        String message = String.format("Player %s has lost connection", playerName);
+                        broadcast(i, message);
+                    }
+                    catch(Exception e) {
+                        System.out.println(e.getMessage());
+                    }
+                }
+            }
+        }
+    }
 
-    private void parseCommand(Session session, UserGameCommand command) throws WebSocketException, SQLException, DataAccessException {
+    private void parseCommand(Session session, UserGameCommand command) throws WebSocketException, SQLException, DataAccessException, IOException {
         try {
             switch(command.getCommandType()) {
                 case CONNECT:
@@ -64,17 +85,17 @@ public class WebSocketHandler {
             }
         }
         catch(WebSocketException e) {
-            throw e;
+            System.out.println(e.getMessage());
         }
         catch(SQLException e) {
             throw e;
         }
-        catch(Exception e) {
+        catch(IOException e) {
             throw e;
         }
     }
 
-    private void joinGame(Session session, UserGameCommand command) throws WebSocketException, SQLException, DataAccessException {
+    private void joinGame(Session session, UserGameCommand command) throws WebSocketException, SQLException, DataAccessException, IOException {
         int gameID = command.getGameID();
         if(!GAMES.containsKey(gameID)) {
             GAMES.put(gameID, new HashSet<Session>());
@@ -89,19 +110,22 @@ public class WebSocketHandler {
         String message;
 
         if(team > 0) {  //white
+            COLORS.put(session, ChessGame.TeamColor.WHITE);
             message = String.format("%s has joined team white", playerName);
         }
         else if(team < 0) { //spectator
             message = String.format("%s has joined as a spectator", playerName);
         }
         else {  //black
+            COLORS.put(session, ChessGame.TeamColor.WHITE);
             message = String.format("%s has joined team black", playerName);
         }
+        AUTHS.put(session, command.getAuthToken());
 
         broadcast(gameID, message);
     }
 
-    private void makeMove(UserGameCommand command) throws WebSocketException, SQLException, DataAccessException {
+    private void makeMove(UserGameCommand command) throws WebSocketException, SQLException, DataAccessException, IOException {
         int gameID = command.getGameID();
         String newGame = command.getNewGame();
         if(!dataaccess.GameDataAccess.updateGame(gameID, newGame)) {
@@ -110,7 +134,9 @@ public class WebSocketHandler {
         touchGame(gameID);
     }
 
-    private void leave(Session session, UserGameCommand command) throws WebSocketException, SQLException, DataAccessException {
+    private void leave(Session session, UserGameCommand command) throws WebSocketException, SQLException, DataAccessException, IOException {
+        COLORS.remove(session);
+        AUTHS.remove(session);
         int gameID = command.getGameID();
         HashSet<Session> sessions = GAMES.get(gameID);
         if(sessions == null) {
@@ -149,7 +175,7 @@ public class WebSocketHandler {
         broadcast(gameID, message);
     }
 
-    private void resign(Session session, UserGameCommand command) throws SQLException, WebSocketException, DataAccessException {
+    private void resign(Session session, UserGameCommand command) throws SQLException, WebSocketException, DataAccessException, IOException {
         int gameID = command.getGameID();
         String playerName = dataaccess.AuthDataAccess.getUsername(command.getAuthToken());
         if(playerName == null) {
@@ -166,15 +192,18 @@ public class WebSocketHandler {
         broadcast(gameID, message);
     }
 
-    private void broadcast(int gameID, String message) {
-        //TODO: make this send a notification to all players in the given game
+    private void broadcast(int gameID, String message) throws IOException {
+        ServerMessage announcement = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, message, null);
         for(Session s : GAMES.get(gameID)) {
+            s.getRemote().sendString(announcement.serialize());
         }
     }
 
-    private void touchGame(int gameID) {
-        //TODO: sends a signal to all joined players to update their game
+    private void touchGame(int gameID) throws IOException, SQLException {
+        ChessGame game = dataaccess.GameDataAccess.getGame(gameID);
+        ServerMessage touch = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME, null, game);
         for(Session s : GAMES.get(gameID)) {
+            s.getRemote().sendString(touch.serialize());
         }
     }
 

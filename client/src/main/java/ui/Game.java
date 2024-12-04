@@ -28,7 +28,7 @@ public class Game {
         Game.authToken = authToken;
         Game.WS = WS;
         try {
-            WS = new WebSocketFacade("ws://localhost:8080/ws");
+            WS = new WebSocketFacade("ws://localhost:8080/ws", Game.authToken);
         }
         catch (Exception e) {
             System.out.println("Could not initialize websocket");
@@ -41,9 +41,13 @@ public class Game {
         return;
     }
 
+    public ChessGame.TeamColor getColor() {
+        return Game.color;
+    }
+
     public static void spectate(ChessGame game) {
+        color = ChessGame.TeamColor.WHITE;
         Game.game = game;
-        Game.color = ChessGame.TeamColor.WHITE;
         while(!quit) {
             awaitTurn();
         }
@@ -275,7 +279,7 @@ public class Game {
             footer = " hgfedcba \n";
         }
 
-        if(color == ChessGame.TeamColor.WHITE) {
+        if(color == ChessGame.TeamColor.WHITE || color == null) {
             margin = 8;
         }
         else {

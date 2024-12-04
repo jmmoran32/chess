@@ -14,7 +14,7 @@ public final class WebSocketFacade extends Endpoint {
     public Session session;
     private URI uri;
 
-    public WebSocketFacade(String url) throws Exception {
+    public WebSocketFacade(String url, String authToken) throws Exception {
         //"ws://localhost:8080/ws"
         this.uri = new URI(url);
         WebSocketContainer container = ContainerProvider.getWebSocketContainer();
@@ -33,9 +33,15 @@ public final class WebSocketFacade extends Endpoint {
             }
         });
     }
+
     
     public void sendCommand(UserGameCommand command) {
-        this.session.getBasicRemote().sendText(command.serialize());
+        try {
+            this.session.getBasicRemote().sendText(command.serialize());
+        }
+        catch(Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     private void parseMessage(String input) throws WebSocketException {
