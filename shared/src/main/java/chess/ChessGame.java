@@ -30,11 +30,11 @@ public class ChessGame {
         if(this.whiteTurn) {
             whiteTurn = 1;
         }
-        else if(this.resigned) {
-            whiteTurn = 2;
-        }
         else {
             whiteTurn = 0;
+        }
+        if(this.resigned) {
+            whiteTurn += 2;
         }
         sb.append(String.format("%d{", whiteTurn));
         sb.append(String.format("%s}", this.board.serialize()));
@@ -46,17 +46,22 @@ public class ChessGame {
         char whiteTurn = serial.charAt(0);
         String boardOnly = serial.substring(2, 66);
         game.setBoard(ChessBoard.deSerialize(boardOnly));
+        if(whiteTurn > 1) {
+            game.resign();
+            whiteTurn -= 2;
+        }
         if(whiteTurn == '0') {
             game.setTeamTurn(ChessGame.TeamColor.BLACK);
-        }
-        else if(whiteTurn == '2') {
-            game.resign();
         }
         return game;
     }
 
     public void resign() {
         this.resigned = true;
+    }
+
+    public boolean isResigned() {
+        return this.resigned;
     }
 
     /**

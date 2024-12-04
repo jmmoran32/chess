@@ -10,9 +10,9 @@ import java.util.ArrayList;
 public class Game {
     private static final String WHITE_TILE = "43m";
     private static final String BLACK_TILE = "45m";
+    private static final String HIGHLIGHT = "44m";
     private static final String WHITE_PIECE = "32;";
     private static final String BLACK_PIECE = "31;";
-    private static final String HIGHLIGHT = "5m";
     private static boolean quit = false;
     private static ChessGame game;
     private static int gameID;
@@ -59,7 +59,7 @@ public class Game {
         else {
             team = "Player black: ";
         }
-        drawBoard();
+        drawBoard(null);
         String input[];
         while(!quit) {
             System.out.print(team);
@@ -69,7 +69,7 @@ public class Game {
                     drawHelp();
                     break;
                 case "rd":
-                    drawBoard();
+                    drawBoard(null);
                     break;
                 case "l":
                     leave();
@@ -96,7 +96,7 @@ public class Game {
                         drawHelp();
                         break;
                     }
-                    highlight();
+                    highlight(input[1]);
                     break;
                 default:
                     System.out.println("Invalid command");
@@ -106,7 +106,70 @@ public class Game {
         return;
     }
 
+    private static void highlight(String fromStr) {
+        char from[] = fromStr.toCharArray();
+        if(from.length < 2) {
+            System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
+        }
+        if(from[0] < '1' || from[0] > '8') {
+            System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
+            return;
+        }
+        if(from[1] < 'a' || from[1] < 'h') {
+            System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
+            return;
+        }
+
+        ChessPosition fromPos = new ChessPosition(from[0] - '0', from[1] - '`');
+
+        ArrayList<ChessPosition> to = new ArrayList<ChessPosition>();
+        for(ChessMove m : Game.game.validMoves(fromPos)) {
+            to.add(m.getEndPosition());
+        }
+
+        ArrayList<int[]> emEn = new ArrayList<int[]>();
+        if(Game.color == ChessGame.TeamColor.WHITE) {
+            for(int i = 0; i < to.size(); i++) {
+                emEn.add(new int[2]);
+                emEn.get(i)[0] = 8 - to.get(i).getRow();
+                emEn.get(i)[1] = to.get(i).getColumn() - 1;
+            }
+        }
+        else {
+            for(int i = 0; i < to.size(); i++) {
+                emEn.add(new int[2]);
+                emEn.get(i)[0] = to.get(i).getRow() - 1;
+                emEn.get(i)[1] =  8 - to.get(i).getColumn();
+            }
+        }
+
+        drawBoard(emEn);
+        return;
+    }
+
+    private static void resign() {
+        if(Game.game.getTeamTurn() != Game.color) {
+            System.out.println("It is not your turn yet!");
+            return;
+        }
+        if(Game.game.isResigned()) {
+            String player = Game.game.getTeamTurn() == ChessGame.TeamColor.WHITE ? "white" : "black";
+            System.out.printf("Player %s has already resigned\n", player);
+            return;
+        }
+        Game.game.resign();
+
+        UserGameCommand resignedGame = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, Game.authToken, Game.gameID, Game.game.serialize(), Game.color == ChessGame.TeamColor.WHITE ? 1 : 0);
+        Game.WS.sendCommand(resignedGame);
+    }
+
     private static void move(String fromStr, String toStr, String promotionStr) {
+        if(Game.game.isResigned()) {
+            String player = (Game.game.getTeamTurn() == ChessGame.TeamColor.WHITE ? "white" : "black");
+            System.out.println(String.format("Player %s has resigned. no more moves may be made.", player));
+            return;
+        }
+
         if(Game.game.getTeamTurn() != Game.color) {
             System.out.println("It is not your turn yet!");
             return;
@@ -120,7 +183,7 @@ public class Game {
             System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
             return;
         }
-        else if(from[1] < 'a' || from[1] < 'h') {
+        if(from[1] < 'a' || from[1] < 'h') {
             System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
             return;
         }
@@ -128,7 +191,7 @@ public class Game {
             System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
             return;
         }
-        else if(to[1] < 'a' || to[1] < 'h') {
+        if(to[1] < 'a' || to[1] < 'h') {
             System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
             return;
         }
@@ -148,8 +211,10 @@ public class Game {
                 break;
             case "q":
                 type = ChessPiece.PieceType.QUEEN;
+                break;
             case null:
                 type = null;
+                break;
             default:
             System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
             return;
@@ -166,36 +231,12 @@ public class Game {
         UserGameCommand newMove = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, Game.authToken, Game.gameID, Game.game.serialize(), Game.color == ChessGame.TeamColor.WHITE ? 1 : 0);
 
         WS.sendCommand(newMove);
-        Thread.sleep(100);
+        try {
+            Thread.sleep(100);
+        }
+        catch(Exception e) {
+        }
         return;
-        /*
-        if(Game.game.getTeamTurn() != Game.color) {
-            System.out.println("Wait your turn");
-            return;
-        }
-                    char from[] = fromStr.toCharArray();
-                    char to[] = toStr.toCharArray();
-                    if(from.length > 2 || to.length > 2) {
-                        System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
-                        return;
-                    }
-                    if(from[0] < '1' || from[0] > '8') {
-                        System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
-                        return;
-                    }
-                    else if(from[1] < 'a' || from[1] < 'h') {
-                        System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
-                        return;
-                    }
-                    ChessPosition selected = new ChessPosition(from[0] - '0', from[1] - '`');
-                    ArrayList<ChessMove> validMoves = (ArrayList<ChessMove>) Game.game.validMoves(selected);
-        ChessPosition target = new ChessPosition(to[0] - '0', to[1] - '`');
-        //TODO: add promotion to move
-        if(!validMoves.contains(proposition)) {
-            System.out.println("Invalid move. To see valid moves, type: hi <position>");
-            return;
-        }
-        */
     }
 
     private static void leave() {
@@ -215,14 +256,14 @@ public class Game {
     }
 
     private static void awaitTurn() {
-        drawBoard();
+        drawBoard(null);
         System.out.print("This part of the game has not been implemented yet. Press any key to exit: ");
         s.nextLine();
         quit = true;
         return;
     }
 
-    private static void drawBoard() {
+    private static void drawBoard(ArrayList<int[]> hi) {
         StringBuilder sb = new StringBuilder();
         int margin;
         String footer;
@@ -242,7 +283,11 @@ public class Game {
         }
 
         sb.append("\n\n");
-        for(String row : formattedBoard()) {
+        if(Game.game.isResigned()) {
+            String player = Game.game.getTeamTurn() == ChessGame.TeamColor.WHITE ? "white" : "black";
+            sb.append(String.format("++++++++++++++++ Player %s has resigned ++++++++++++++++\n", player));
+        }
+        for(String row : formattedBoard(hi)) {
             if(color == ChessGame.TeamColor.WHITE) {
                 sb.append(margin--);
             }
@@ -255,7 +300,7 @@ public class Game {
         System.out.println(sb.toString());
     }
 
-    private static String[] formattedBoard() {
+    private static String[] formattedBoard(ArrayList<int[]> hi) {
         char[] whiteBoard = new char[64];
         char[] blackBoard;
         char[] bucketBoard;
@@ -294,6 +339,13 @@ public class Game {
                     bucketTile = BLACK_TILE;
                 }
                 sb.append("\033[");
+                for(int p[] : hi) {
+                    if((p[0] == i && p[1] == j)) {
+                        sb.append("5;");
+                        bucketTile = HIGHLIGHT;
+                        break;
+                    }
+                }
                 sb.append(bucketPiece);
                 sb.append(bucketTile);
                 sb.append(bucketChar);
@@ -318,6 +370,7 @@ public class Game {
 
     public static void touchBoard(String serial) {
         updateGame(serial);
-        drawBoard();
+        drawBoard(null);
     }
+
 }

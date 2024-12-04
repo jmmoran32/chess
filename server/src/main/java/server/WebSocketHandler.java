@@ -15,7 +15,6 @@ import dataaccess.DataAccessException;
 
 @WebSocket
 public class WebSocketHandler {
-    private static final String SERVER_MESSAGES[] = {"LOAD_GAME", "ERROR", "NOTIFICATION"};
     private static final String USER_COMMANDS[] = {"CONNECT", "MAKE_MOVE", "LEAVE", "RESIGN"};
     private static final ConcurrentHashMap<Integer, HashSet<Session>> GAMES = new ConcurrentHashMap<Integer, HashSet<Session>>();
 
@@ -183,10 +182,7 @@ public class WebSocketHandler {
         String first[] = message.split("\t");
         Object command;
 
-        if(Arrays.asList(SERVER_MESSAGES).contains(first[0])) {
-            command = ServerMessage.deSerialize(message);
-        }
-        else if(Arrays.asList(USER_COMMANDS).contains(first[0])) {
+        if(Arrays.asList(USER_COMMANDS).contains(first[0])) {
             command = UserGameCommand.deSerialize(message);
         }
         else {
