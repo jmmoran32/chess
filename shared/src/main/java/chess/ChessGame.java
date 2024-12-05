@@ -46,7 +46,7 @@ public class ChessGame {
         char whiteTurn = serial.charAt(0);
         String boardOnly = serial.substring(2, 66);
         game.setBoard(ChessBoard.deSerialize(boardOnly));
-        if(whiteTurn > 1) {
+        if(whiteTurn > '1') {
             game.resign();
             whiteTurn -= 2;
         }
@@ -111,6 +111,17 @@ public class ChessGame {
            }
         }
         return validMoves;
+    }
+
+    public boolean willPromote(ChessMove mov) {
+        for(ChessMove m : validMoves(mov.getStartPosition())) {
+            if(m.getPromotionPiece() != null) {
+                if(mov.getEndPosition().equals(m.getEndPosition())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private boolean testMove(ChessMove mov) {

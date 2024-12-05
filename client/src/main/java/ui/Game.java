@@ -18,6 +18,7 @@ public class Game {
     private static int gameID;
     private static String authToken;
     private static ChessGame.TeamColor color;
+    private static boolean isSpectator;
     private static WebSocketFacade WS;
     public static Scanner s = new Scanner(System.in);
 
@@ -26,6 +27,7 @@ public class Game {
         Game.gameID = gameID;
         Game.color = playerColor;
         Game.authToken = authToken;
+        Game.isSpectator = false;
         Game.WS = WS;
         try {
             WS = new WebSocketFacade("ws://localhost:8080/ws", Game.authToken);
@@ -34,6 +36,16 @@ public class Game {
             System.out.println("Could not initialize websocket");
             return;
         }
+        try {
+            int team = Game.color == ChessGame.TeamColor.WHITE ? 1 : 0;
+            UserGameCommand join = new UserGameCommand(UserGameCommand.CommandType.CONNECT, Game.authToken, Game.gameID, null, team);
+            WS.sendCommand(join);
+        }
+        catch(Exception e) {
+            System.out.println("Failed to join game: " + e.getMessage());
+            return;
+        }
+            drawBoard(null);
         while(!quit) {
             takeTurn();
         }
@@ -48,6 +60,7 @@ public class Game {
     public static void spectate(ChessGame game) {
         color = ChessGame.TeamColor.WHITE;
         Game.game = game;
+        Game.isSpectator = true;
         while(!quit) {
             awaitTurn();
         }
@@ -63,7 +76,6 @@ public class Game {
         else {
             team = "Player black: ";
         }
-        drawBoard(null);
         String input[];
         while(!quit) {
             System.out.print(team);
@@ -85,11 +97,27 @@ public class Game {
                         drawHelp();
                         break;
                     }
-                    String promotion = null;
-                    if(input.length > 3) {
-                        promotion = input[3];
+                    int status = move(input[1], input[2]);
+                    if(status == 1 || status == 0) {
+                        return;
                     }
-                    move(input[1], input[2], input[3]);
+                    if(status == 2) {
+                        String from = input[1];
+                        String to = input[2];
+                        while(true) {
+                            System.out.print("Your pawn will be promoted. What piece should it be promoted to?: ");
+                            input = s.nextLine().split(" ");
+                            if(input.length < 1) {
+                                System.out.println("Invalid piece type. Type r, n, b, q, or x to cancel.");
+                            }
+                            if(input[0].equals("x")) {
+                                return;
+                            }
+                            if(!promote(from, to, input[0])) {
+                                System.out.println("Invalid piece type. Type r, n, b, q, or x to cancel.");
+                            }
+                        }
+                    }
                     break;
                 case "r":
                     resign();
@@ -105,6 +133,7 @@ public class Game {
                 default:
                     System.out.println("Invalid command");
                     drawHelp();
+                    return;
             }
         }
         return;
@@ -119,7 +148,7 @@ public class Game {
             System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
             return;
         }
-        if(from[1] < 'a' || from[1] < 'h') {
+        if(from[1] < 'a' || from[1] > 'h') {
             System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
             return;
         }
@@ -167,41 +196,66 @@ public class Game {
         Game.WS.sendCommand(resignedGame);
     }
 
-    private static void move(String fromStr, String toStr, String promotionStr) {
+    private static int move(String fromStr, String toStr) {
         if(Game.game.isResigned()) {
             String player = (Game.game.getTeamTurn() == ChessGame.TeamColor.WHITE ? "white" : "black");
             System.out.println(String.format("Player %s has resigned. no more moves may be made.", player));
-            return;
+            return 1;
         }
 
         if(Game.game.getTeamTurn() != Game.color) {
             System.out.println("It is not your turn yet!");
-            return;
+            return 1;
         }
         char from[] = fromStr.toCharArray();
         char to[] = toStr.toCharArray();
         if(from.length < 2 || to.length < 2) {
-            System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
+            System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h]");
         }
         if(from[0] < '1' || from[0] > '8') {
-            System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
-            return;
+            System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h]");
+            return 1;
         }
-        if(from[1] < 'a' || from[1] < 'h') {
-            System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
-            return;
+        if(from[1] < 'a' || from[1] > 'h') {
+            System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h]");
+            return 1;
         }
         if(to[0] < '1' || to[0] > '8') {
-            System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
-            return;
+            System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h]");
+            return 1;
         }
-        if(to[1] < 'a' || to[1] < 'h') {
-            System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
-            return;
+        if(to[1] < 'a' || to[1] > 'h') {
+            System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h]");
+            return 1;
         }
 
         ChessPosition fromPos = new ChessPosition(from[0] - '0', from[1] - '`');
         ChessPosition toPos = new ChessPosition(to[0] - '0', to[1] - '`');
+        ChessMove move = new ChessMove(fromPos, toPos, null);
+        if(Game.game.willPromote(move)) {
+            return 2;
+        }
+
+        try {
+            Game.game.makeMove(move);
+        }
+        catch(InvalidMoveException e) {
+            System.out.println(e.getMessage());
+            return 1;
+        }
+        
+        UserGameCommand newMove = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, Game.authToken, Game.gameID, Game.game.serialize(), Game.color == ChessGame.TeamColor.WHITE ? 1 : 0);
+
+        WS.sendCommand(newMove);
+        try {
+            Thread.sleep(100);
+        }
+        catch(Exception e) {
+        }
+        return 0;
+    }
+
+    private static boolean promote(String fromStr, String toStr, String promotionStr) {
         ChessPiece.PieceType type;
         switch(promotionStr) {
             case "r":
@@ -216,22 +270,22 @@ public class Game {
             case "q":
                 type = ChessPiece.PieceType.QUEEN;
                 break;
-            case null:
-                type = null;
-                break;
             default:
-            System.out.println("Invalid move or position\n\tm [1-8|[a-h] [1-8]|[a-h] [r,n,b,q]");
-            return;
+                return false;
         }
-
+        char from[] = fromStr.toCharArray();
+        char to[] = toStr.toCharArray();
+        ChessPosition fromPos = new ChessPosition(from[0] - '0', from[1] - '`');
+        ChessPosition toPos = new ChessPosition(to[0] - '0', to[1] - '`');
+        ChessMove move = new ChessMove(fromPos, toPos, type);
         try {
-            Game.game.makeMove(new ChessMove(fromPos, toPos, type));
+            Game.game.makeMove(move);
         }
         catch(InvalidMoveException e) {
             System.out.println(e.getMessage());
-            return;
+            return false;
         }
-        
+
         UserGameCommand newMove = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, Game.authToken, Game.gameID, Game.game.serialize(), Game.color == ChessGame.TeamColor.WHITE ? 1 : 0);
 
         WS.sendCommand(newMove);
@@ -240,11 +294,15 @@ public class Game {
         }
         catch(Exception e) {
         }
-        return;
+        return true;
     }
 
     private static void leave() {
-        UserGameCommand leaveCommand = new UserGameCommand(UserGameCommand.CommandType.LEAVE, Game.authToken, Game.gameID, null, null);
+        int team = Game.color == ChessGame.TeamColor.WHITE ? 1 : 0;
+        if(Game.isSpectator) {
+            team = -1;
+        }
+        UserGameCommand leaveCommand = new UserGameCommand(UserGameCommand.CommandType.LEAVE, Game.authToken, Game.gameID, null, team);
         WS.sendCommand(leaveCommand);
     }
 
@@ -343,11 +401,13 @@ public class Game {
                     bucketTile = BLACK_TILE;
                 }
                 sb.append("\033[");
-                for(int p[] : hi) {
-                    if((p[0] == i && p[1] == j)) {
-                        sb.append("5;");
-                        bucketTile = HIGHLIGHT;
-                        break;
+                if(hi != null) {
+                    for(int p[] : hi) {
+                        if((p[0] == i && p[1] == j)) {
+                            sb.append("5;");
+                            bucketTile = HIGHLIGHT;
+                            break;
+                        }
                     }
                 }
                 sb.append(bucketPiece);
@@ -365,7 +425,14 @@ public class Game {
     }
 
     public static void notify(String message) {
-        System.out.println(message);
+        String team; 
+        if(color == ChessGame.TeamColor.WHITE) {
+            team = "Player white: ";
+        }
+        else {
+            team = "Player black: ";
+        }
+        System.out.printf("\n%s\n%s", message, team);
     }
 
     public static void updateGame(String serial) {
@@ -375,6 +442,18 @@ public class Game {
     public static void touchBoard(String serial) {
         updateGame(serial);
         drawBoard(null);
+        String team; 
+        if(color == ChessGame.TeamColor.WHITE) {
+            team = "Player white: ";
+        }
+        else {
+            team = "Player black: ";
+        }
+        System.out.print(team);
+    }
+
+    public static void errorCatch(String message) {
+        System.out.println("A server error occurred: " + message);
     }
 
 }

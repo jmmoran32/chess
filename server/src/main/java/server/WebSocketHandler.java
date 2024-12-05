@@ -131,6 +131,19 @@ public class WebSocketHandler {
         if(!dataaccess.GameDataAccess.updateGame(gameID, newGame)) {
             throw new WebSocketException("The game in the DB couldn't be updated.");
         }
+        ChessGame game = ChessGame.deSerialize(newGame);
+        if(game.isInCheckmate(ChessGame.TeamColor.WHITE)) {
+            broadcast(gameID, "White is in checkmate!");
+        }
+        else if(game.isInCheck(ChessGame.TeamColor.WHITE)) {
+            broadcast(gameID, "White is in check...");
+        }
+        if(game.isInCheckmate(ChessGame.TeamColor.BLACK)) {
+            broadcast(gameID, "Black is in checkmate!");
+        }
+        else if(game.isInCheck(ChessGame.TeamColor.BLACK)) {
+            broadcast(gameID, "Black is in check...");
+        }
         touchGame(gameID);
     }
 

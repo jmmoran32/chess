@@ -21,6 +21,8 @@ public class ServerMessage {
 
     public ServerMessage(ServerMessageType type, String message, chess.ChessGame game) {
         this.serverMessageType = type;
+        this.message = message;
+        this.game = game;
     }
 
     public ServerMessageType getServerMessageType() {
@@ -86,6 +88,10 @@ public class ServerMessage {
         }
         switch(deSerial[0]) {
             case "LOAD_GAME":
+                if(deSerial[2].equals("U")) {
+                    System.out.println("Cannot load an undefined game!");
+                    return null;
+                }
                 return new ServerMessage(ServerMessageType.LOAD_GAME, deSerial[1], chess.ChessGame.deSerialize(deSerial[2]));
             case "ERROR":
                 return new ServerMessage(ServerMessageType.ERROR, deSerial[1], null);

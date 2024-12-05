@@ -18,8 +18,8 @@ public class UserGameCommand {
 
     private final String newGame;
 
-    //1 for white, 0 for black, -1 for spectator
-    private final Integer team;
+    //1 for white, 0 for black, -1 for spectator, 2 for undefined
+    private Integer team = 2;
 
     public UserGameCommand(CommandType commandType, String authToken, Integer gameID, String newGame, Integer team) {
         this.commandType = commandType;
@@ -55,13 +55,17 @@ public class UserGameCommand {
                 return null;
         }
 
-        sb.append(this.authToken);
+        if(this.authToken == null) {sb.append("U");}
+        else {sb.append(this.authToken);}
         sb.append('\t');
-        sb.append(Integer.toString(this.gameID));
+        if(this.gameID == null) {sb.append("U");}
+        else {sb.append(Integer.toString(this.gameID));}
         sb.append('\t');
-        sb.append(this.newGame);
+        if(this.newGame == null) {sb.append("U");}
+        else {sb.append(this.newGame);}
         sb.append('\t');
-        sb.append(Integer.toString(this.team));
+        if(this.team == null) {sb.append("U");}
+        else {sb.append(Integer.toString(this.team));}
         return sb.toString();
     }
 
@@ -88,8 +92,18 @@ public class UserGameCommand {
             default:
                 return null;
         }
-        
-        return new UserGameCommand(ctype, serialArray[1], Integer.parseInt(serialArray[2]), serialArray[3], Integer.parseInt(serialArray[4]));
+        String authToken = serialArray[1];
+        if(authToken.equals("U")) {authToken = null;}
+
+        Integer gameID;
+        if(serialArray[2].equals("U")) {gameID = null;}
+        else {gameID = Integer.parseInt(serialArray[2]);}
+
+        Integer team;
+        if(serialArray[4].equals("U")) {team = null;}
+        else {team = Integer.parseInt(serialArray[4]);}
+
+        return new UserGameCommand(ctype, authToken, gameID, serialArray[3], team);
     }
 
 
