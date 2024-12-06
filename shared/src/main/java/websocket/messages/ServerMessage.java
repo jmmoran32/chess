@@ -1,6 +1,7 @@
 package websocket.messages;
 
 import java.util.Objects;
+import com.google.gson.Gson;
 
 /**
  * Represents a Message the server can send through a WebSocket
@@ -10,13 +11,17 @@ import java.util.Objects;
  */
 public class ServerMessage {
     ServerMessageType serverMessageType;
-    String message;
-    chess.ChessGame game;
+    String message = null;
+    chess.ChessGame game = null;
 
     public enum ServerMessageType {
         LOAD_GAME,
         ERROR,
         NOTIFICATION
+    }
+
+    public ServerMessage(ServerMessageType type) {
+        this.serverMessageType = type;
     }
 
     public ServerMessage(ServerMessageType type, String message, chess.ChessGame game) {
@@ -35,6 +40,43 @@ public class ServerMessage {
     
     public String getMessage() {
         return this.message;
+    }
+
+    public static ServerMessage deSerializeJson(String json) {
+        String split[] = json.split(",");
+        if(split[0].contains("LOAD_GAME")) {
+            String game = split[1].substring(8, split[1].length() - 2);
+            chess.ChessGame gameObj = chess.ChessGame.deSerialize(game);
+            return new ServerMessage(ServerMessageType.LOAD_GAME, null, gameObj);
+        }
+        else if(split[0].contains("ERROR")) {
+            String message = split[1].substring(16, split[1].length() - 2);
+            return new ServerMessage(ServerMessageType.ERROR, message, null);
+        }
+        else if(split[0].contains("NOTIFICATION")) {
+            String message = split[1].substring(11, split[1].length() - 2);
+            return new ServerMessage(ServerMessageType.ERROR, message, null);
+        }
+        else {
+            return null;
+        }
+    }
+
+    public String serializeJson() {
+        String message;
+        switch(this.serverMessageType) {
+            case ServerMessageType.LOAD_GAME:
+                message = "{\"serverMessageType\":\"LOAD_GAME\",\"game\":\"" + this.game + "\"}";
+                return message;
+            case ServerMessageType.ERROR:
+                message = "{\"serverMessageType\":\"ERROR\",\"errorMessage\":\"" + this.message + "\"}";
+                return message;
+            case ServerMessageType.NOTIFICATION:
+                message = "{\"serverMessageType\":\"NOTIFICATION\",\"message\":\"" + this.message + "\"}";
+                return message;
+            default:
+                return null;
+        }
     }
 
     @Override

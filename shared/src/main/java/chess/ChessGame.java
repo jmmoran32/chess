@@ -124,7 +124,7 @@ public class ChessGame {
         return false;
     }
 
-    private boolean testMove(ChessMove mov) {
+    public boolean testMove(ChessMove mov) {
         ChessGame.TeamColor c;
         ChessPiece p = this.board.getPiece(mov.getStartPosition());
         ChessPiece at = this.board.getPiece(mov.getEndPosition());
@@ -164,7 +164,7 @@ public class ChessGame {
         ArrayList<ChessMove> validMoves = (ArrayList<ChessMove>) validMoves(move.getStartPosition());
         if(!validMoves.contains(move)) {
             throw new InvalidMoveException(String.format(
-                        "%s is not a valid move for %s\nValid moves: %s", move.getEndPosition(), move.getStartPosition(), validMoves.toString()));
+                        "%s is not a valid move for %s. Valid moves: %s", move.getEndPosition(), move.getStartPosition(), validMoves.toString()));
         }
         this.board.addPiece(move.getStartPosition(), null);
         if(move.getPromotionPiece() != null) {

@@ -84,6 +84,21 @@ public class GameDataAccess extends SQLDataAccess {
         }
     }
 
+    public static boolean isPlayer(int gameID, String username) throws DataAccessException, SQLException {
+        GameData gd = getGameObject(gameID);
+        if(gd.whiteUsername() != null) {
+            if(gd.whiteUsername().equals(username)) {
+                return true;
+            }
+        }
+        if(gd.blackUsername() != null) {
+            if(gd.blackUsername().equals(username)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static int newGame(String gameName) throws DataAccessException, SQLException {
         StringBuilder sb = new StringBuilder();
         ChessGame game = new ChessGame();

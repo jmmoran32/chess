@@ -1,6 +1,8 @@
 package websocket.commands;
 
 import java.util.Objects;
+import chess.ChessMove;
+import com.google.gson.Gson;
 
 /**
  * Represents a command a user can send the server over a websocket
@@ -16,17 +18,24 @@ public class UserGameCommand {
 
     private final Integer gameID;
 
-    private final String newGame;
-
+    private final ChessMove move;
     //1 for white, 0 for black, -1 for spectator, 2 for undefined
     private Integer team = 2;
 
-    public UserGameCommand(CommandType commandType, String authToken, Integer gameID, String newGame, Integer team) {
+    public UserGameCommand(CommandType commandType, String authToken, Integer gameID) {
         this.commandType = commandType;
         this.authToken = authToken;
         this.gameID = gameID;
-        this.newGame = newGame;
+        this.team = 2;
+        this.move = null;
+    }
+
+    public UserGameCommand(CommandType commandType, String authToken, Integer gameID, ChessMove move) {
+        this.commandType = commandType;
+        this.authToken = authToken;
+        this.gameID = gameID;
         this.team = team;
+        this.move = move;
     }
 
     public enum CommandType {
@@ -36,6 +45,7 @@ public class UserGameCommand {
         RESIGN
     }
 
+    /*
     public String serialize() {
         StringBuilder sb = new StringBuilder();
         switch(this.commandType) {
@@ -61,9 +71,6 @@ public class UserGameCommand {
         if(this.gameID == null) {sb.append("U");}
         else {sb.append(Integer.toString(this.gameID));}
         sb.append('\t');
-        if(this.newGame == null) {sb.append("U");}
-        else {sb.append(this.newGame);}
-        sb.append('\t');
         if(this.team == null) {sb.append("U");}
         else {sb.append(Integer.toString(this.team));}
         return sb.toString();
@@ -71,7 +78,7 @@ public class UserGameCommand {
 
     public static UserGameCommand deSerialize(String serial) {
         String serialArray[] = serial.split("\t");
-        if(serialArray.length < 5) {
+        if(serialArray.length < 3) {
             return null;
         }
 
@@ -99,12 +106,19 @@ public class UserGameCommand {
         if(serialArray[2].equals("U")) {gameID = null;}
         else {gameID = Integer.parseInt(serialArray[2]);}
 
+        if(serialArray.length == 3) {
+            return new UserGameCommand(ctype, authToken, gameID);
+        }
+        else if(serialArray.length != 5) {
+            return null;
+        }
         Integer team;
         if(serialArray[4].equals("U")) {team = null;}
         else {team = Integer.parseInt(serialArray[4]);}
 
         return new UserGameCommand(ctype, authToken, gameID, serialArray[3], team);
     }
+    */
 
 
     public CommandType getCommandType() {
@@ -119,8 +133,8 @@ public class UserGameCommand {
         return gameID;
     }
 
-    public String getNewGame() {
-        return this.newGame;
+    public ChessMove getMove() {
+        return this.move;
     }
 
     public int getTeam() {
