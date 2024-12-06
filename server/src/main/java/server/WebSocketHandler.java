@@ -20,15 +20,16 @@ import com.google.gson.Gson;
 public class WebSocketHandler {
     private static ConcurrentHashMap<Integer, Session> SESSIONS = new ConcurrentHashMap<Integer, Session>();
     private final ConcurrentHashMap<Integer, ConcurrentHashMap<Integer, Session>> GAMES = new ConcurrentHashMap<Integer, ConcurrentHashMap<Integer, Session>>();
+    private final ConcurrentHashMap<Integer, Integer> COLORS = new ConcurrentHashMap<Integer, Integer>();
 
     public WebSocketHandler() {
     }
 
     @OnWebSocketConnect
     public void connect(Session session) {
-        System.out.printf("OnConnect called for session %d\n", session.hashCode());
+        //System.out.printf("OnConnect called for session %d\n", session.hashCode());
         if(SESSIONS.put(session.hashCode(), session) != null) {
-            System.out.printf("added session %d to master list\n", session.hashCode());
+            //System.out.printf("added session %d to master list\n", session.hashCode());
         }
     }
 
@@ -37,6 +38,8 @@ public class WebSocketHandler {
         //System.out.printf("OnClose called for session %d by reason of %s\n", session.hashCode(), reason);
         if(SESSIONS.remove(session.hashCode()) != null) {
             //System.out.printf("removed session %d from master list in onCLose\n", session.hashCode());
+        }
+        if(COLORS.remove(session.hashCode()) != null) {
         }
         ConcurrentHashMap<Integer, Session> map;
         for(Integer i : GAMES.keySet()) {
@@ -66,7 +69,7 @@ public class WebSocketHandler {
 
     @OnWebSocketMessage
     public void onMessage(Session session, String message) {
-        System.out.println("\nRecieved a message from: " + session.hashCode());
+        //System.out.println("\nRecieved a message from: " + session.hashCode());
         //trimSessions();
         UserGameCommand command = deSerialize(message);
         try {
@@ -168,12 +171,6 @@ public class WebSocketHandler {
             throw new WebSocketException("no game was found matchin gameID: " + gameID);
         }
         */
-        if(!GAMES.containsKey(gameID)) {
-            GAMES.put(gameID, new ConcurrentHashMap<Integer, Session>());
-        }
-        if(GAMES.get(gameID).put(session.hashCode(), session) != null) {
-            //System.out.printf("added session %s to game %d\n", session.hashCode(), gameID);
-        }
 
         String playerName = dataaccess.AuthDataAccess.getUsername(command.getAuthToken());
         if(playerName == null) {
@@ -183,6 +180,13 @@ public class WebSocketHandler {
         int team;
 
         if(gameData.whiteUsername().equals(playerName)) {
+            if(gameData.blackUsername().equals(playerName)) {
+                for(Integer h : GAMES.get(gameID).keySet()) {
+                    if(COLORS.get(h.hashCode()) != null) {
+                        team = COLORS.get(h.hashCode()) == 1 ? 0 : 1;
+                    }
+                }
+            }
             team = 1;
         }
         else if(gameData.blackUsername().equals(playerName)) {
@@ -191,25 +195,34 @@ public class WebSocketHandler {
         else {
             team = -1;
         }
+        if(team == 1 || team == 0) {
+            COLORS.put(session.hashCode(), team);
+        }
+        if(!GAMES.containsKey(gameID)) {
+            GAMES.put(gameID, new ConcurrentHashMap<Integer, Session>());
+        }
+        if(GAMES.get(gameID).put(session.hashCode(), session) != null) {
+            //System.out.printf("added session %s to game %d\n", session.hashCode(), gameID);
+        }
         String message;
 
         if(team == 1) {  //white
-            //System.out.printf("%d as player %s has been identified as joining team white\n", session.hashCode(), playerName);
+            System.out.printf("%d as player %s has been identified as joining team white\n", session.hashCode(), playerName);
             message = String.format("%s has joined team white", playerName);
         }
         else if(team == -1) { //spectator
-            //System.out.printf("%d as player %s has been identified as joining team spectator\n", session.hashCode(), playerName);
+            System.out.printf("%d as player %s has been identified as joining team spectator\n", session.hashCode(), playerName);
             message = String.format("%s has joined as a spectator", playerName);
         }
         else if(team == 0) {  //black
-            //System.out.printf("%d as player %s has been identified as joining team black\n", session.hashCode(), playerName);
+            System.out.printf("%d as player %s has been identified as joining team black\n", session.hashCode(), playerName);
             message = String.format("%s has joined team black", playerName);
         }
         else {
             throw new WebSocketException("Couldn't identify team");
         }
 
-        touchOne(session, gameID);
+        touchOne(session.hashCode(), gameID);
         broadcast(session, gameID, message);
         //System.out.printf("%d has finished joining game\n", session.hashCode());
     }
@@ -218,20 +231,39 @@ public class WebSocketHandler {
         String authToken = command.getAuthToken();
         String playerName = dataaccess.AuthDataAccess.getUsername(authToken);
         if(playerName == null) {
+            sendError(session, "Error: player not found. try reloggin.");
             throw new DataAccessException("The player couldn't be found in the DB");
         }
         int gameID = command.getGameID();
         if(!dataaccess.GameDataAccess.isPlayer(gameID, playerName)) {
             throw new WebSocketException(String.format("Player %s isn't white or black", playerName));
         }
-        ChessGame game;
-        game = dataaccess.GameDataAccess.getGame(gameID);
+        dbobjects.GameData gameData = dataaccess.GameDataAccess.getGameObject(gameID);
+        if(gameData == null) {
+            throw new DataAccessException("Error finding player name in db");
+        }
+        chess.ChessGame game = gameData.game();
         if(game == null) {
             throw new DataAccessException("unable to get game from DB");
         }
         chess.ChessMove move = command.getMove();
         if(move == null) {
             throw new Exception("couldn't find move in makeMove()");
+        }
+
+        int team;
+        if(COLORS.get(session.hashCode()) == null) {
+            team = -1;
+        }
+        else team = COLORS.get(session.hashCode());
+
+        if(team == -1) {
+            sendError(session, "Error: spectators may not make moves");
+        }
+        ChessGame.TeamColor color = team == 1 ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
+        if(color != game.getTeamTurn()) {
+            String message = String.format("Error: it is not the turn of %s", color.toString());
+            sendError(session, message);
         }
 
         try {
@@ -260,6 +292,8 @@ public class WebSocketHandler {
             broadcast(gameID, "Black is in check...");
         }
         touchGame(gameID);
+        String moveMessage = String.format("%s has made a move: %s", color.toString(), move.toString());
+        broadcast(session, gameID, moveMessage);
     }
 
     private void leave(Session session, UserGameCommand command) throws WebSocketException, SQLException, DataAccessException, IOException {
@@ -355,15 +389,17 @@ public class WebSocketHandler {
         ServerMessage announcement = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, message, null);
         ConcurrentHashMap<Integer, Session> map = GAMES.get(gameID);
         for(Session s : map.values()) {
-            System.out.printf("attempting to broadcast to %d int gameID %d\n", s.hashCode(), gameID);
+            //System.out.printf("attempting to broadcast to %d int gameID %d\n", s.hashCode(), gameID);
             if(s.hashCode() == session.hashCode()) {
-                System.out.println("skipping broadcast to " + session.hashCode());
+                //System.out.println("skipping broadcast to " + session.hashCode());
                 continue;
             }
-            System.out.printf("broadcasting %d in gameID: %d\n", s.hashCode(), gameID);
+            //System.out.printf("broadcasting %d in gameID: %d\n", s.hashCode(), gameID);
             notificationJson n = new notificationJson(ServerMessage.ServerMessageType.NOTIFICATION, message);
             Gson g = new Gson();
-            s.getRemote().sendString(g.toJson(n));
+            String json = g.toJson(n);
+            s.getRemote().sendString(json);
+           // System.out.printf("\nsent this to %d: %s\n\n", s.hashCode(), json);
         }
     }
 
@@ -376,7 +412,9 @@ public class WebSocketHandler {
             System.out.printf("broadcasting %d in gameID: %d\n", s.hashCode(), gameID);
             //s.getRemote().sendString(announcement.serialize());
             //s.getRemote().sendString(announcement.serializeJson());
-            s.getRemote().sendString(g.toJson(n));
+            String json = g.toJson(n);
+            s.getRemote().sendString(json);
+            //System.out.printf("\nsent this to %d: %s\n\n", s.hashCode(), json);
         }
     }
 
@@ -389,13 +427,21 @@ public class WebSocketHandler {
         }
     }
 
-    private void touchOne(Session s, int gameID) throws IOException, SQLException {
+    private void touchOne(int hash, int gameID) throws IOException, SQLException {
+        Session s = GAMES.get(gameID).get(hash);
         ChessGame game = dataaccess.GameDataAccess.getGame(gameID);
         Gson g = new Gson();
         touchJson n = new touchJson(ServerMessage.ServerMessageType.LOAD_GAME, game.serialize());
-        System.out.printf("touching %d for %d only\n", gameID, s.hashCode());
-        System.out.printf("\n%s\n\n", g.toJson(n));
-        s.getRemote().sendString(g.toJson(n));
+        //System.out.printf("touching %d for %d only\n", gameID, s.hashCode());
+        String json = g.toJson(n);
+        try {
+            Thread.sleep(100);
+        }
+        catch(Exception e) {
+            System.out.println("failed to sleep before touching one");
+        }
+        s.getRemote().sendString(json);
+        System.out.printf("\nsent this to %d: %s\n\n", s.hashCode(), json);
     }
 
     private void touchGame(int gameID) throws IOException, SQLException {
@@ -404,10 +450,12 @@ public class WebSocketHandler {
         Gson g = new Gson();
         touchJson n = new touchJson(ServerMessage.ServerMessageType.LOAD_GAME, game.serialize());
         for(Session s : GAMES.get(gameID).values()) {
-            System.out.printf("touching %d in gameID: %d\n", s.hashCode(), gameID);
+            //System.out.printf("touching %d in gameID: %d\n", s.hashCode(), gameID);
             //s.getRemote().sendString(touch.serialize());
             //s.getRemote().sendString(touch.serializeJson());
-            s.getRemote().sendString(g.toJson(n));
+            String json = g.toJson(n);
+            s.getRemote().sendString(json);
+            System.out.printf("\nsent this to %d: %s\n\n", s.hashCode(), json);
         }
     }
 
