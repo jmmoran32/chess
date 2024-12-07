@@ -163,7 +163,9 @@ public class WebSocketHandler {
         int gameID = command.getGameID();
         dbobjects.GameData gameData = dataaccess.GameDataAccess.getGameObject(gameID);
         if(gameData == null) {
-            throw new DataAccessException("Error finding player name in db");
+            String message = "Error: Unable to find a game with ID: " + gameID;
+            sendError(session, message);
+            //throw new DataAccessException("Error finding player name in db");
         }
         chess.ChessGame game = gameData.game();
         /*
@@ -201,8 +203,12 @@ public class WebSocketHandler {
         if(!GAMES.containsKey(gameID)) {
             GAMES.put(gameID, new ConcurrentHashMap<Integer, Session>());
         }
-        if(GAMES.get(gameID).put(session.hashCode(), session) != null) {
-            //System.out.printf("added session %s to game %d\n", session.hashCode(), gameID);
+        GAMES.get(gameID).put(session.hashCode(), session);
+        if(GAMES.get(1).containsKey(session.hashCode())) {
+            System.out.printf("added session %s to game %d\n", session.hashCode(), gameID);
+        }
+        else {
+            System.out.printf("failed to add session %d to game %d\n", session.hashCode(), gameID);
         }
         String message;
 
@@ -246,6 +252,11 @@ public class WebSocketHandler {
         if(game == null) {
             throw new DataAccessException("unable to get game from DB");
         }
+        if(game.isResigned()) {
+            String message = String.format("Team %s has resigned. no more moves may be made", game.getTeamTurn().toString());
+            sendError(session, message);
+            return;
+        }
         chess.ChessMove move = command.getMove();
         if(move == null) {
             throw new Exception("couldn't find move in makeMove()");
@@ -259,11 +270,13 @@ public class WebSocketHandler {
 
         if(team == -1) {
             sendError(session, "Error: spectators may not make moves");
+            return;
         }
         ChessGame.TeamColor color = team == 1 ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
         if(color != game.getTeamTurn()) {
             String message = String.format("Error: it is not the turn of %s", color.toString());
             sendError(session, message);
+            return;
         }
 
         try {
@@ -303,7 +316,8 @@ public class WebSocketHandler {
             throw new WebSocketException("No sessions were found associated with gameID: " + gameID);
         }
 
-        if(sessions.remove(session.hashCode()) != null) {
+        sessions.remove(session.hashCode());
+        if(sessions.containsKey(session.hashCode())) {
             throw new WebSocketException("The player cannot leave a game they haven't joined");
         }
         else {
@@ -339,22 +353,35 @@ public class WebSocketHandler {
     }
 
     private void resign(Session session, UserGameCommand command) throws SQLException, WebSocketException, DataAccessException, IOException {
+        System.out.printf("%d has called resign", session.hashCode());
         int gameID = command.getGameID();
+        dbobjects.GameData gameData = dataaccess.GameDataAccess.getGameObject(gameID);
         String playerName = dataaccess.AuthDataAccess.getUsername(command.getAuthToken());
         if(playerName == null) {
             throw new WebSocketException("Unable to find player name associated with token: " + command.getAuthToken());
         }
 
         ChessGame game;
-        game = dataaccess.GameDataAccess.getGame(gameID);
+        game = gameData.game();
         if(game == null) {
             throw new SQLException("unable to get game from DB");
         }
+        if(game.isResigned()) {
+            String message = String.format("this game has already been resigned by team %s", game.getTeamTurn().toString());
+            sendError(session, message);
+            return;
+        }
+        if(!(gameData.whiteUsername().equals(playerName) || gameData.blackUsername().equals(playerName))) {
+            String message = "Only players may resign";
+            sendError(session, message);
+            return;
+        }
+        game.resign();
         String newGame = game.serialize();
         if(!dataaccess.GameDataAccess.updateGame(gameID, newGame)) {
             throw new WebSocketException("The game in the DB couldn't be updated.");
         }
-        touchGame(gameID);
+        //touchGame(gameID);
 
         String message = String.format("Player %s has resigned", playerName);
         broadcast(gameID, message);
@@ -399,7 +426,7 @@ public class WebSocketHandler {
             Gson g = new Gson();
             String json = g.toJson(n);
             s.getRemote().sendString(json);
-           // System.out.printf("\nsent this to %d: %s\n\n", s.hashCode(), json);
+            System.out.printf("\nsent this to %d: %s\n\n", s.hashCode(), json);
         }
     }
 
@@ -414,7 +441,7 @@ public class WebSocketHandler {
             //s.getRemote().sendString(announcement.serializeJson());
             String json = g.toJson(n);
             s.getRemote().sendString(json);
-            //System.out.printf("\nsent this to %d: %s\n\n", s.hashCode(), json);
+            System.out.printf("\nsent this to %d: %s\n\n", s.hashCode(), json);
         }
     }
 
@@ -434,12 +461,6 @@ public class WebSocketHandler {
         touchJson n = new touchJson(ServerMessage.ServerMessageType.LOAD_GAME, game.serialize());
         //System.out.printf("touching %d for %d only\n", gameID, s.hashCode());
         String json = g.toJson(n);
-        try {
-            Thread.sleep(100);
-        }
-        catch(Exception e) {
-            System.out.println("failed to sleep before touching one");
-        }
         s.getRemote().sendString(json);
         System.out.printf("\nsent this to %d: %s\n\n", s.hashCode(), json);
     }
