@@ -159,7 +159,7 @@ public class GameDataAccess extends SQLDataAccess {
         }
     }
 
-    public static boolean LeaveGame(chess.ChessGame.TeamColor color, int gameID) throws SQLException {
+    public static boolean leaveGame(chess.ChessGame.TeamColor color, int gameID) throws SQLException {
         dbobjects.GameData record = GameDataAccess.getGameObject(gameID);
         if(record == null) {
             return false;

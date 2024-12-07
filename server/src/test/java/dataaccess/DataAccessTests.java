@@ -235,7 +235,7 @@ public class DataAccessTests {
     @DisplayName("Create Auth Good")
     public void createAuthGood() throws Exception {
         AuthDataAccess.createAuth(authToken, goodUser.username());
-        Assertions.assertTrue(findAuth(authToken));
+        Assertions.assertTrue(findTheAuth(authToken));
         Assertions.assertTrue(findAuthUser(goodUser.username()));
     }
 
@@ -377,7 +377,7 @@ public class DataAccessTests {
         }
     }
 
-    private boolean findAuth(String auth) throws Exception {
+    private boolean findTheAuth(String auth) throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT *\n");
         sb.append("FROM AUTH_DATA\n");

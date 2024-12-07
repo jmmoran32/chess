@@ -273,7 +273,7 @@ public class WebSocketHandler {
             color = chess.ChessGame.TeamColor.BLACK;
         }
 
-        if(!dataaccess.GameDataAccess.LeaveGame(color, gameID)) {
+        if(!dataaccess.GameDataAccess.leaveGame(color, gameID)) {
             throw new WebSocketException("couldn't find a game associated with: " + gameID);
         }
 
