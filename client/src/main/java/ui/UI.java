@@ -19,7 +19,6 @@ public class UI {
     private static boolean quit = false;
     private static final ConcurrentHashMap<String, ChessGameRecord> GAMES_MAP = new ConcurrentHashMap<String, ChessGameRecord>();
     private static int listIndex = 1;
-    private static WebSocketFacade WS;
 
 
     public static void run(String url) {

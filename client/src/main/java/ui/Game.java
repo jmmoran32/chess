@@ -19,7 +19,7 @@ public class Game {
     private static String authToken;
     private static ChessGame.TeamColor color;
     private static boolean isSpectator;
-    private static WebSocketFacade WS;
+    private static WebSocketFacade ws;
     public static Scanner s = new Scanner(System.in);
 
     public static void playGame(ChessGame game, int gameID, ChessGame.TeamColor playerColor, String authToken) {
@@ -28,24 +28,22 @@ public class Game {
         Game.color = playerColor;
         Game.authToken = authToken;
         Game.isSpectator = false;
-        Game.WS = WS;
         try {
-            WS = new WebSocketFacade("ws://localhost:8080/ws", Game.authToken);
+            ws = new WebSocketFacade("ws://localhost:8080/ws", Game.authToken);
         }
         catch (Exception e) {
             System.out.println("Could not initialize websocket");
             return;
         }
         try {
-            int team = Game.color == ChessGame.TeamColor.WHITE ? 1 : 0;
-            UserGameCommand join = new UserGameCommand(UserGameCommand.CommandType.CONNECT, Game.authToken, Game.gameID, null, team);
-            WS.sendCommand(join);
+            UserGameCommand join = new UserGameCommand(UserGameCommand.CommandType.CONNECT, Game.authToken, Game.gameID);
+            ws.sendCommand(join);
         }
         catch(Exception e) {
             System.out.println("Failed to join game: " + e.getMessage());
             return;
         }
-            drawBoard(null);
+            //drawBoard(null);
         while(!quit) {
             takeTurn();
         }
@@ -104,19 +102,7 @@ public class Game {
                     if(status == 2) {
                         String from = input[1];
                         String to = input[2];
-                        while(true) {
-                            System.out.print("Your pawn will be promoted. What piece should it be promoted to?: ");
-                            input = s.nextLine().split(" ");
-                            if(input.length < 1) {
-                                System.out.println("Invalid piece type. Type r, n, b, q, or x to cancel.");
-                            }
-                            if(input[0].equals("x")) {
-                                return;
-                            }
-                            if(!promote(from, to, input[0])) {
-                                System.out.println("Invalid piece type. Type r, n, b, q, or x to cancel.");
-                            }
-                        }
+                        promotePrompt(from, to);
                     }
                     break;
                 case "r":
@@ -137,6 +123,23 @@ public class Game {
             }
         }
         return;
+    }
+
+    private static void promotePrompt(String from, String to) {
+        while(true) {
+                            System.out.print("Your pawn will be promoted. What piece should it be promoted to?: ");
+                            String input[];
+                            input = s.nextLine().split(" ");
+                            if(input.length < 1) {
+                                System.out.println("Invalid piece type. Type r, n, b, q, or x to cancel.");
+                            }
+                            if(input[0].equals("x")) {
+                                return;
+                            }
+                            if(!promote(from, to, input[0])) {
+                                System.out.println("Invalid piece type. Type r, n, b, q, or x to cancel.");
+                            }
+        }
     }
 
     private static void highlight(String fromStr) {
@@ -192,8 +195,8 @@ public class Game {
         }
         Game.game.resign();
 
-        UserGameCommand resignedGame = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, Game.authToken, Game.gameID, Game.game.serialize(), Game.color == ChessGame.TeamColor.WHITE ? 1 : 0);
-        Game.WS.sendCommand(resignedGame);
+        UserGameCommand resignedGame = new UserGameCommand(UserGameCommand.CommandType.RESIGN, Game.authToken, Game.gameID);
+        Game.ws.sendCommand(resignedGame);
     }
 
     private static int move(String fromStr, String toStr) {
@@ -244,9 +247,9 @@ public class Game {
             return 1;
         }
         
-        UserGameCommand newMove = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, Game.authToken, Game.gameID, Game.game.serialize(), Game.color == ChessGame.TeamColor.WHITE ? 1 : 0);
+        UserGameCommand newMove = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, Game.authToken, Game.gameID, move);
 
-        WS.sendCommand(newMove);
+        ws.sendCommand(newMove);
         try {
             Thread.sleep(100);
         }
@@ -286,9 +289,9 @@ public class Game {
             return false;
         }
 
-        UserGameCommand newMove = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, Game.authToken, Game.gameID, Game.game.serialize(), Game.color == ChessGame.TeamColor.WHITE ? 1 : 0);
+        UserGameCommand newMove = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, Game.authToken, Game.gameID, move);
 
-        WS.sendCommand(newMove);
+        ws.sendCommand(newMove);
         try {
             Thread.sleep(100);
         }
@@ -302,8 +305,8 @@ public class Game {
         if(Game.isSpectator) {
             team = -1;
         }
-        UserGameCommand leaveCommand = new UserGameCommand(UserGameCommand.CommandType.LEAVE, Game.authToken, Game.gameID, null, team);
-        WS.sendCommand(leaveCommand);
+        UserGameCommand leaveCommand = new UserGameCommand(UserGameCommand.CommandType.LEAVE, Game.authToken, Game.gameID);
+        ws.sendCommand(leaveCommand);
     }
 
     private static void drawHelp() {
@@ -319,10 +322,43 @@ public class Game {
 
     private static void awaitTurn() {
         drawBoard(null);
-        System.out.print("This part of the game has not been implemented yet. Press any key to exit: ");
-        s.nextLine();
-        quit = true;
+        String team = "spectator: ";
+        String myinput[];
+        while(!quit) {
+            System.out.print(team);
+            myinput = s.nextLine().split(" ");
+            switch(myinput[0]) {
+                case "h":
+                    drawHelp();
+                    break;
+                case "l":
+                    leave();
+                    quit = true;
+                    break;
+                case "m":
+                    System.out.println("This command is not available to spectators");
+                    break;
+                case "rd":
+                    drawBoard(null);
+                    break;
+                case "r":
+                    System.out.println("This command is not available to spectators");
+                    break;
+                case "hi":
+                    if(myinput.length < 2) {
+                        System.out.println("Invalid command");
+                        drawHelp();
+                        break;
+                    }
+                    highlight(myinput[1]);
+                    break;
+                default:
+                    System.out.println("Invalid command");
+                    drawHelp();
+                    return;
+            }
         return;
+        }
     }
 
     private static void drawBoard(ArrayList<int[]> hi) {
@@ -402,13 +438,7 @@ public class Game {
                 }
                 sb.append("\033[");
                 if(hi != null) {
-                    for(int p[] : hi) {
-                        if((p[0] == i && p[1] == j)) {
-                            sb.append("5;");
-                            bucketTile = HIGHLIGHT;
-                            break;
-                        }
-                    }
+                            bucketTile = ihateThis(hi, bucketTile, sb, i, j);
                 }
                 sb.append(bucketPiece);
                 sb.append(bucketTile);
@@ -416,12 +446,22 @@ public class Game {
 
                 whitetile ^= true;
             }
-            sb.append("\033[0m\n");
+            sb.append("\033[25;0m\n");
             board[i] = sb.toString();
             sb = new StringBuilder();
             whitetile ^= true;
         }
         return board;
+    }
+
+    private static String ihateThis(ArrayList<int[]> hi, String def, StringBuilder sb, int i, int j) {
+                    for(int p[] : hi) {
+                        if((p[0] == i && p[1] == j)) {
+                            sb.append("5;");
+                            return HIGHLIGHT;
+                        }
+                    }
+                    return def;
     }
 
     public static void notify(String message) {
@@ -452,8 +492,5 @@ public class Game {
         System.out.print(team);
     }
 
-    public static void errorCatch(String message) {
-        System.out.println("A server error occurred: " + message);
-    }
 
 }

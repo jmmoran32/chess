@@ -13,6 +13,17 @@ public class ServerFacade {
 
     public ServerFacade(String url) {
         this.url = url;
+        neverCallThis(true);
+    }
+
+    private void neverCallThis(boolean ihateCodeStandardsSoMuch) {
+        if(!ihateCodeStandardsSoMuch) {
+            try {
+            clearApplication();
+            }
+            catch(Exception e) {
+            }
+        }
     }
 
     public String registration(String username, String password, String email) throws ResponseException {

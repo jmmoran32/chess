@@ -2,6 +2,7 @@ package websocket.messages;
 
 import java.util.Objects;
 import com.google.gson.Gson;
+import chess.ChessGame;
 
 /**
  * Represents a Message the server can send through a WebSocket
@@ -12,7 +13,7 @@ import com.google.gson.Gson;
 public class ServerMessage {
     ServerMessageType serverMessageType;
     String message = null;
-    chess.ChessGame game = null;
+    ChessGame game = null;
 
     public enum ServerMessageType {
         LOAD_GAME,
@@ -24,9 +25,13 @@ public class ServerMessage {
         this.serverMessageType = type;
     }
 
-    public ServerMessage(ServerMessageType type, String message, chess.ChessGame game) {
+    public ServerMessage(ServerMessageType type, String message) {
         this.serverMessageType = type;
         this.message = message;
+    }
+
+    public ServerMessage(ServerMessageType type, ChessGame game) {
+        this.serverMessageType = type;
         this.game = game;
     }
 
@@ -42,40 +47,51 @@ public class ServerMessage {
         return this.message;
     }
 
-    public static ServerMessage deSerializeJson(String json) {
-        String split[] = json.split(",");
-        if(split[0].contains("LOAD_GAME")) {
-            String game = split[1].substring(8, split[1].length() - 2);
-            chess.ChessGame gameObj = chess.ChessGame.deSerialize(game);
-            return new ServerMessage(ServerMessageType.LOAD_GAME, null, gameObj);
-        }
-        else if(split[0].contains("ERROR")) {
-            String message = split[1].substring(16, split[1].length() - 2);
-            return new ServerMessage(ServerMessageType.ERROR, message, null);
-        }
-        else if(split[0].contains("NOTIFICATION")) {
-            String message = split[1].substring(11, split[1].length() - 2);
-            return new ServerMessage(ServerMessageType.ERROR, message, null);
-        }
-        else {
-            return null;
+    private class NotificationJson {
+        ServerMessage.ServerMessageType serverMessageType;
+        String message;
+        NotificationJson(ServerMessage.ServerMessageType type, String message) {
+            this.serverMessageType = type;
+            this.message = message;
         }
     }
 
-    public String serializeJson() {
-        String message;
-        switch(this.serverMessageType) {
-            case ServerMessageType.LOAD_GAME:
-                message = "{\"serverMessageType\":\"LOAD_GAME\",\"game\":\"" + this.game + "\"}";
-                return message;
-            case ServerMessageType.ERROR:
-                message = "{\"serverMessageType\":\"ERROR\",\"errorMessage\":\"" + this.message + "\"}";
-                return message;
-            case ServerMessageType.NOTIFICATION:
-                message = "{\"serverMessageType\":\"NOTIFICATION\",\"message\":\"" + this.message + "\"}";
-                return message;
-            default:
-                return null;
+    private class ErrorJson {
+        ServerMessage.ServerMessageType serverMessageType;
+        String errorMessage;
+
+        ErrorJson(ServerMessage.ServerMessageType type, String message) {
+            this.serverMessageType = type;
+            this.errorMessage = message;
+        }
+    }
+
+    private class TouchJson {
+        ServerMessage.ServerMessageType serverMessageType;
+        String game;
+        TouchJson(ServerMessage.ServerMessageType type, String game) {
+            this.serverMessageType = type;
+            this.game = game;
+        }
+    }
+
+    public static ServerMessage deSerialize(String serial) {
+        Gson g = new Gson();
+        String split[] = serial.split(",");
+        if(split[0].contains("NOTIFICATION")) {
+            NotificationJson json = g.fromJson(serial, NotificationJson.class);
+            return new ServerMessage(json.serverMessageType, json.message);
+        }
+        if(split[0].contains("ERROR")) {
+            ErrorJson json = g.fromJson(serial, ErrorJson.class);
+            return new ServerMessage(json.serverMessageType, json.errorMessage);
+        }
+        if(split[0].contains("LOAD_GAME")) {
+            TouchJson json = g.fromJson(serial, TouchJson.class);
+            return new ServerMessage(json.serverMessageType, ChessGame.deSerialize(json.game));
+        }
+        else {
+            return null;
         }
     }
 
@@ -96,51 +112,5 @@ public class ServerMessage {
         return Objects.hash(getServerMessageType());
     }
 
-    public String serialize() {
-        StringBuilder sb = new StringBuilder();
-        switch(this.serverMessageType) {
-            case LOAD_GAME:
-                sb.append("LOAD_GAME");
-                break;
-            case ERROR:
-                sb.append("ERROR");
-                break;
-            case NOTIFICATION:
-                sb.append("NOTIFICATION");
-                break;
-            default:
-                sb.append("UNDEFINED");
-        }
-        sb.append("\t");
-        sb.append(this.message);
-        sb.append("\t");
-        if(this.game == null) {
-            sb.append('U');
-        }
-        else {
-            sb.append(this.game.serialize());
-        }
-        return sb.toString();
-    }
 
-    public static ServerMessage deSerialize(String serial) {
-        String deSerial[] = serial.split("\t");
-        if(deSerial.length != 3) {
-            return null;
-        }
-        switch(deSerial[0]) {
-            case "LOAD_GAME":
-                if(deSerial[2].equals("U")) {
-                    System.out.println("Cannot load an undefined game!");
-                    return null;
-                }
-                return new ServerMessage(ServerMessageType.LOAD_GAME, deSerial[1], chess.ChessGame.deSerialize(deSerial[2]));
-            case "ERROR":
-                return new ServerMessage(ServerMessageType.ERROR, deSerial[1], null);
-            case "NOTIFICATION":
-                return new ServerMessage(ServerMessageType.NOTIFICATION, deSerial[1], null);
-            default:
-                return null;
-        }
-    }
 }

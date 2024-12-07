@@ -119,8 +119,10 @@ public class WebSocketHandler {
         }
         int team;
 
-        if(gameData.whiteUsername().equals(playerName)) {
-            if(gameData.blackUsername().equals(playerName)) {
+        String w = gameData.whiteUsername();
+        String b = gameData.blackUsername();
+        if(w != null && gameData.whiteUsername().equals(playerName)) {
+            if(b != null && gameData.blackUsername().equals(playerName)) {
                 for(Integer h : GAMES.get(gameID).keySet()) {
                     if(COLORS.get(h.hashCode()) != null) {
                         team = COLORS.get(h.hashCode()) == 1 ? 0 : 1;
@@ -253,8 +255,11 @@ public class WebSocketHandler {
             throw new WebSocketException("Unable to find player name associated with token: " + command.getAuthToken());
         }
         
-        int team = command.getTeam();
-        chess.ChessGame.TeamColor color;
+        int team = -1;
+        Integer hashColor = COLORS.get(session.hashCode());
+        if(hashColor != null) {team = hashColor;} 
+
+        ChessGame.TeamColor color;
 
         if(team > 0) {
             color = chess.ChessGame.TeamColor.WHITE;
@@ -334,7 +339,7 @@ public class WebSocketHandler {
     }
 
     private void broadcast(Session session, int gameID, String message) throws IOException {
-        ServerMessage announcement = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, message, null);
+        ServerMessage announcement = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, message);
         ConcurrentHashMap<Integer, Session> map = GAMES.get(gameID);
         for(Session s : map.values()) {
             if(s.hashCode() == session.hashCode()) {
@@ -348,7 +353,7 @@ public class WebSocketHandler {
     }
 
     private void broadcast(int gameID, String message) throws IOException {
-        ServerMessage announcement = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, message, null);
+        ServerMessage announcement = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, message);
         NotificationJson n = new NotificationJson(ServerMessage.ServerMessageType.NOTIFICATION, message);
         Gson g = new Gson();
         for(Session s : GAMES.get(gameID).values()) {
@@ -377,7 +382,7 @@ public class WebSocketHandler {
 
     private void touchGame(int gameID) throws IOException, SQLException {
         ChessGame game = dataaccess.GameDataAccess.getGame(gameID);
-        ServerMessage touch = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME, null, game);
+        ServerMessage touch = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME, game);
         Gson g = new Gson();
         TouchJson n = new TouchJson(ServerMessage.ServerMessageType.LOAD_GAME, game.serialize());
         for(Session s : GAMES.get(gameID).values()) {

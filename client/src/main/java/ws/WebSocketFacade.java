@@ -26,8 +26,10 @@ public final class WebSocketFacade extends Endpoint {
                     parseMessage(message);
                 }
                 catch(WebSocketException e) {
+                    System.out.println("Websocket exeption thrown: " + e.getMessage());
                 }
                 catch(Exception e) {
+                    System.out.printf("Uncaught exception thrown of type %s: %s\n", e.getClass().getSimpleName(), e.getMessage());
                 }
                 //System.out.println(message);
             }
@@ -44,8 +46,8 @@ public final class WebSocketFacade extends Endpoint {
         }
     }
 
-    private void parseMessage(String input) throws WebSocketException {
-        ServerMessage message = deSerialize(input);
+    private void parseMessage(String smessage) throws WebSocketException {
+        ServerMessage message = ServerMessage.deSerialize(smessage);
         if(message == null) {
             throw new WebSocketException("The message recieved did not match any expected message: " + message);
         }
@@ -71,37 +73,10 @@ public final class WebSocketFacade extends Endpoint {
         ui.Game.notify(message.getMessage());
     }
 
-    private ServerMessage deSerialize(String message) {
-        String first[] = message.split("\t");
-        ServerMessage serverMessage;
-
-        if(Arrays.asList(SERVER_MESSAGES).contains(first[0])) {
-            serverMessage = ServerMessage.deSerialize(message);
-        }
-        else {
-            serverMessage = null;
-        }
-
-        return serverMessage;
-    }
-
     @SuppressWarnings("serial")
     private class WebSocketException extends Exception {
         public WebSocketException(String message) {super(message);}
     }
-    /*
-    public void onMessage(String message) {
-    }
-    */
-
-    /*
-    public void echo(String message) {
-        try {
-            this.session.getBasicRemote().sendText(message);
-        }
-        catch(IOException e){}
-    }
-    */
 
     @Override
     public void onOpen(Session session, EndpointConfig config) {

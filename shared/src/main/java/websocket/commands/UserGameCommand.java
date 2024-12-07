@@ -20,13 +20,11 @@ public class UserGameCommand {
 
     private final ChessMove move;
     //1 for white, 0 for black, -1 for spectator, 2 for undefined
-    private Integer team = 2;
 
     public UserGameCommand(CommandType commandType, String authToken, Integer gameID) {
         this.commandType = commandType;
         this.authToken = authToken;
         this.gameID = gameID;
-        this.team = 2;
         this.move = null;
     }
 
@@ -34,7 +32,6 @@ public class UserGameCommand {
         this.commandType = commandType;
         this.authToken = authToken;
         this.gameID = gameID;
-        this.team = team;
         this.move = move;
     }
 
@@ -45,80 +42,43 @@ public class UserGameCommand {
         RESIGN
     }
 
-    /*
-    public String serialize() {
-        StringBuilder sb = new StringBuilder();
-        switch(this.commandType) {
-            case CONNECT:
-                sb.append("CONNECT\t");
-                break;
-            case MAKE_MOVE:
-                sb.append("MAKE_MOVE\t");
-                break;
-            case LEAVE:
-                sb.append("LEAVE\t");
-                break;
-            case RESIGN:
-                sb.append("RESIGN\t");
-                break;
-            default:
-                return null;
-        }
-
-        if(this.authToken == null) {sb.append("U");}
-        else {sb.append(this.authToken);}
-        sb.append('\t');
-        if(this.gameID == null) {sb.append("U");}
-        else {sb.append(Integer.toString(this.gameID));}
-        sb.append('\t');
-        if(this.team == null) {sb.append("U");}
-        else {sb.append(Integer.toString(this.team));}
-        return sb.toString();
-    }
-
-    public static UserGameCommand deSerialize(String serial) {
-        String serialArray[] = serial.split("\t");
-        if(serialArray.length < 3) {
-            return null;
-        }
-
-        CommandType ctype;
-        switch(serialArray[0]) {
-            case "CONNECT":
-                ctype = CommandType.CONNECT;
-                break;
-            case "MAKE_MOVE":
-                ctype = CommandType.MAKE_MOVE;
-                break;
-            case "LEAVE":
-                ctype = CommandType.LEAVE;
-                break;
-            case "RESIGN":
-                ctype = CommandType.RESIGN;
-                break;
-            default:
-                return null;
-        }
-        String authToken = serialArray[1];
-        if(authToken.equals("U")) {authToken = null;}
-
+    private class CommandJson {
+        UserGameCommand.CommandType commandType;
+        String authToken;
         Integer gameID;
-        if(serialArray[2].equals("U")) {gameID = null;}
-        else {gameID = Integer.parseInt(serialArray[2]);}
 
-        if(serialArray.length == 3) {
-            return new UserGameCommand(ctype, authToken, gameID);
+        CommandJson(UserGameCommand.CommandType type, String token, Integer id) {
+            this.commandType = type;
+            this.authToken = token;
+            this.gameID = id;
         }
-        else if(serialArray.length != 5) {
-            return null;
-        }
-        Integer team;
-        if(serialArray[4].equals("U")) {team = null;}
-        else {team = Integer.parseInt(serialArray[4]);}
-
-        return new UserGameCommand(ctype, authToken, gameID, serialArray[3], team);
     }
-    */
+
+    private class MoveJson {
+        UserGameCommand.CommandType commandType;
+        String authToken;
+        Integer gameID;
+        chess.ChessMove move;
+
+        MoveJson(UserGameCommand.CommandType type, String token, Integer id, chess.ChessMove move) {
+            this.commandType = type;
+            this.authToken = token;
+            this.gameID = id;
+            this.move = move;
+        }
+    }
+
+    public String serialize() {
+        Gson g = new Gson();
+        if(this.commandType == CommandType.MAKE_MOVE) {
+            MoveJson json = new MoveJson(this.commandType, this.authToken, this.gameID, this.move); 
+            return g.toJson(json);
+        }
+        else {
+            CommandJson json = new CommandJson(this.commandType, this.authToken, this.gameID);
+            return g.toJson(json);
+        }
+    }
 
 
     public CommandType getCommandType() {
@@ -135,10 +95,6 @@ public class UserGameCommand {
 
     public ChessMove getMove() {
         return this.move;
-    }
-
-    public int getTeam() {
-        return this.team;
     }
 
     @Override
