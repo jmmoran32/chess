@@ -18,49 +18,30 @@ import com.google.gson.Gson;
 
 @WebSocket
 public class WebSocketHandler {
-    private static ConcurrentHashMap<Integer, Session> SESSIONS = new ConcurrentHashMap<Integer, Session>();
-    private final ConcurrentHashMap<Integer, ConcurrentHashMap<Integer, Session>> GAMES = new ConcurrentHashMap<Integer, ConcurrentHashMap<Integer, Session>>();
-    private final ConcurrentHashMap<Integer, Integer> COLORS = new ConcurrentHashMap<Integer, Integer>();
+    private static final ConcurrentHashMap<Integer, Session> SESSIONS = new ConcurrentHashMap<Integer, Session>();
+    private static final ConcurrentHashMap<Integer, ConcurrentHashMap<Integer, Session>> GAMES = 
+        new ConcurrentHashMap<Integer, ConcurrentHashMap<Integer, Session>>();
+    private static final ConcurrentHashMap<Integer, Integer> COLORS = new ConcurrentHashMap<Integer, Integer>();
 
     public WebSocketHandler() {
     }
 
     @OnWebSocketConnect
     public void connect(Session session) {
-        //System.out.printf("OnConnect called for session %d\n", session.hashCode());
-        if(SESSIONS.put(session.hashCode(), session) != null) {
-            //System.out.printf("added session %d to master list\n", session.hashCode());
-        }
+        SESSIONS.put(session.hashCode(), session);
     }
 
     @OnWebSocketClose
     public void close(Session session, int status, String reason) {
-        //System.out.printf("OnClose called for session %d by reason of %s\n", session.hashCode(), reason);
-        if(SESSIONS.remove(session.hashCode()) != null) {
-            //System.out.printf("removed session %d from master list in onCLose\n", session.hashCode());
-        }
-        if(COLORS.remove(session.hashCode()) != null) {
-        }
+        SESSIONS.remove(session.hashCode());
+        COLORS.remove(session.hashCode());
         ConcurrentHashMap<Integer, Session> map;
         for(Integer i : GAMES.keySet()) {
             map = GAMES.get(i);
-                if(map.remove(session.hashCode()) != null) {
-                    //System.out.printf("removed session %d from game %d in onClose\n", session.hashCode(), i);
-                    }
+            map.remove(session.hashCode());
         }
-
-        /*
-        for(Integer i : GAMES.keySet()) {
-            for(Session s : GAMES.get(i)) {
-                if(session.hashCode() == s.hashCode()) {
-                    if(GAMES.get(i).remove(s)) {
-                        System.out.printf("removed session %d from game %d in onClose\n", s.hashCode(), i);
-                    }
-                }
-            }
-        }
-        */
     }
+
 
     @OnWebSocketError
     public void onErrorRecieved(Throwable e) {
@@ -69,8 +50,6 @@ public class WebSocketHandler {
 
     @OnWebSocketMessage
     public void onMessage(Session session, String message) {
-        //System.out.println("\nRecieved a message from: " + session.hashCode());
-        //trimSessions();
         UserGameCommand command = deSerialize(message);
         try {
             if(command != null) {
@@ -83,42 +62,10 @@ public class WebSocketHandler {
         catch(Exception e) {
             System.out.println("There was an error when parsing messge: " + e.getClass().getSimpleName() + e.getMessage());
         }
-
-
-        /*
-        //delete
-        System.out.printf("Recieved %s", message);
-        session.getRemote().sendString("WebSocket response: " + message);
-        //Add logic to intepret what type of message has just been recieved
-        */
     }
 
-    /*
-    private void trimSessions() {
-        //String playerName;
-        System.out.println("Trimming...");
-        for(Integer i : GAMES.keySet()) {
-            for(Session s : GAMES.get(i)) {
-                if(!s.isOpen()) {
-                    try {
-                        //playerName = dataaccess.AuthDataAccess.getUsername(AUTHS.get(s));
-                        //dataaccess.GameDataAccess.LeaveGame(COLORS.get(s), i);
-                        if(GAMES.get(i).remove(s)) {
-                            System.out.printf("trimmed session %d\n", s.hashCode());
-                        }
-                        //String message = String.format("Player %s has lost connection", playerName);
-                        //broadcast(i, message);
-                    }
-                    catch(Exception e) {
-                        System.out.println(e.getMessage());
-                    }
-                }
-            }
-        }
-    }
-    */
-
-    private void parseCommand(Session session, UserGameCommand command) throws WebSocketException, SQLException, DataAccessException, IOException, Exception {
+    private void parseCommand(Session session, UserGameCommand command) 
+            throws WebSocketException, SQLException, DataAccessException, IOException, Exception {
         try {
             switch(command.getCommandType()) {
                 case CONNECT:
@@ -133,7 +80,6 @@ public class WebSocketHandler {
                 case RESIGN:
                     resign(session, command);
                     break;
-                //TODO: should I make another command for plain broadcasts? may use it for check warnings
             }
         }
         catch(WebSocketException e) {
@@ -159,26 +105,18 @@ public class WebSocketHandler {
     }
 
     private void joinGame(Session session, UserGameCommand command) throws WebSocketException, SQLException, DataAccessException, IOException {
-        //System.out.println("Now joining to game: " + session.hashCode());
         int gameID = command.getGameID();
         dbobjects.GameData gameData = dataaccess.GameDataAccess.getGameObject(gameID);
         if(gameData == null) {
             String message = "Error: Unable to find a game with ID: " + gameID;
             sendError(session, message);
-            //throw new DataAccessException("Error finding player name in db");
         }
         chess.ChessGame game = gameData.game();
-        /*
-        if(game == null) {
-            throw new WebSocketException("no game was found matchin gameID: " + gameID);
-        }
-        */
 
         String playerName = dataaccess.AuthDataAccess.getUsername(command.getAuthToken());
         if(playerName == null) {
             throw new WebSocketException("Unable to find player name associated with token: " + command.getAuthToken());
         }
-        //System.out.printf("%d has been identified as player %s\n", session.hashCode(), playerName);
         int team;
 
         if(gameData.whiteUsername().equals(playerName)) {
@@ -204,24 +142,15 @@ public class WebSocketHandler {
             GAMES.put(gameID, new ConcurrentHashMap<Integer, Session>());
         }
         GAMES.get(gameID).put(session.hashCode(), session);
-        if(GAMES.get(1).containsKey(session.hashCode())) {
-            System.out.printf("added session %s to game %d\n", session.hashCode(), gameID);
-        }
-        else {
-            System.out.printf("failed to add session %d to game %d\n", session.hashCode(), gameID);
-        }
         String message;
 
         if(team == 1) {  //white
-            System.out.printf("%d as player %s has been identified as joining team white\n", session.hashCode(), playerName);
             message = String.format("%s has joined team white", playerName);
         }
         else if(team == -1) { //spectator
-            System.out.printf("%d as player %s has been identified as joining team spectator\n", session.hashCode(), playerName);
             message = String.format("%s has joined as a spectator", playerName);
         }
         else if(team == 0) {  //black
-            System.out.printf("%d as player %s has been identified as joining team black\n", session.hashCode(), playerName);
             message = String.format("%s has joined team black", playerName);
         }
         else {
@@ -230,10 +159,10 @@ public class WebSocketHandler {
 
         touchOne(session.hashCode(), gameID);
         broadcast(session, gameID, message);
-        //System.out.printf("%d has finished joining game\n", session.hashCode());
     }
 
-    private void makeMove(Session session, UserGameCommand command) throws WebSocketException, SQLException, DataAccessException, IOException, Exception {
+    private void makeMove(Session session, UserGameCommand command) 
+            throws WebSocketException, SQLException, DataAccessException, IOException, Exception {
         String authToken = command.getAuthToken();
         String playerName = dataaccess.AuthDataAccess.getUsername(authToken);
         if(playerName == null) {
@@ -266,7 +195,9 @@ public class WebSocketHandler {
         if(COLORS.get(session.hashCode()) == null) {
             team = -1;
         }
-        else team = COLORS.get(session.hashCode());
+        else {
+            team = COLORS.get(session.hashCode());
+        }
 
         if(team == -1) {
             sendError(session, "Error: spectators may not make moves");
@@ -286,7 +217,6 @@ public class WebSocketHandler {
             sendError(session, "move error: " + e.getMessage());
             return;
         }
-        System.out.printf("\nsession %d, player %s has made a move\n", session.hashCode(), playerName);
 
         String newGame = game.serialize();
         if(!dataaccess.GameDataAccess.updateGame(gameID, newGame)) {
@@ -317,12 +247,6 @@ public class WebSocketHandler {
         }
 
         sessions.remove(session.hashCode());
-        if(sessions.containsKey(session.hashCode())) {
-            throw new WebSocketException("The player cannot leave a game they haven't joined");
-        }
-        else {
-            System.out.printf("removed session %d from game %d by reason of leave command\n", session.hashCode(), gameID);
-        }
 
         String playerName = dataaccess.AuthDataAccess.getUsername(command.getAuthToken());
         if(playerName == null) {
@@ -353,7 +277,6 @@ public class WebSocketHandler {
     }
 
     private void resign(Session session, UserGameCommand command) throws SQLException, WebSocketException, DataAccessException, IOException {
-        System.out.printf("%d has called resign", session.hashCode());
         int gameID = command.getGameID();
         dbobjects.GameData gameData = dataaccess.GameDataAccess.getGameObject(gameID);
         String playerName = dataaccess.AuthDataAccess.getUsername(command.getAuthToken());
@@ -381,32 +304,30 @@ public class WebSocketHandler {
         if(!dataaccess.GameDataAccess.updateGame(gameID, newGame)) {
             throw new WebSocketException("The game in the DB couldn't be updated.");
         }
-        //touchGame(gameID);
-
         String message = String.format("Player %s has resigned", playerName);
         broadcast(gameID, message);
     }
 
-    private class errorJson {
+    private class ErrorJson {
         ServerMessage.ServerMessageType serverMessageType;
         String errorMessage;
 
-        errorJson(ServerMessage.ServerMessageType type, String message) {
+        ErrorJson(ServerMessage.ServerMessageType type, String message) {
             this.serverMessageType = type;
             this.errorMessage = message;
         }
     }
 
     private void sendError(Session session, String message) throws IOException {
-        errorJson j = new errorJson(ServerMessage.ServerMessageType.ERROR, message);
+        ErrorJson j = new ErrorJson(ServerMessage.ServerMessageType.ERROR, message);
         Gson g = new Gson();
         session.getRemote().sendString(g.toJson(j));
     }
 
-    private class notificationJson {
+    private class NotificationJson {
         ServerMessage.ServerMessageType serverMessageType;
         String message;
-        notificationJson(ServerMessage.ServerMessageType type, String message) {
+        NotificationJson(ServerMessage.ServerMessageType type, String message) {
             this.serverMessageType = type;
             this.message = message;
         }
@@ -416,39 +337,30 @@ public class WebSocketHandler {
         ServerMessage announcement = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, message, null);
         ConcurrentHashMap<Integer, Session> map = GAMES.get(gameID);
         for(Session s : map.values()) {
-            //System.out.printf("attempting to broadcast to %d int gameID %d\n", s.hashCode(), gameID);
             if(s.hashCode() == session.hashCode()) {
-                //System.out.println("skipping broadcast to " + session.hashCode());
                 continue;
             }
-            //System.out.printf("broadcasting %d in gameID: %d\n", s.hashCode(), gameID);
-            notificationJson n = new notificationJson(ServerMessage.ServerMessageType.NOTIFICATION, message);
+            NotificationJson n = new NotificationJson(ServerMessage.ServerMessageType.NOTIFICATION, message);
             Gson g = new Gson();
             String json = g.toJson(n);
             s.getRemote().sendString(json);
-            System.out.printf("\nsent this to %d: %s\n\n", s.hashCode(), json);
         }
     }
 
     private void broadcast(int gameID, String message) throws IOException {
         ServerMessage announcement = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, message, null);
-        notificationJson n = new notificationJson(ServerMessage.ServerMessageType.NOTIFICATION, message);
-           // s.getRemote().sendString(announcement.serializeJson());
+        NotificationJson n = new NotificationJson(ServerMessage.ServerMessageType.NOTIFICATION, message);
         Gson g = new Gson();
         for(Session s : GAMES.get(gameID).values()) {
-            System.out.printf("broadcasting %d in gameID: %d\n", s.hashCode(), gameID);
-            //s.getRemote().sendString(announcement.serialize());
-            //s.getRemote().sendString(announcement.serializeJson());
             String json = g.toJson(n);
             s.getRemote().sendString(json);
-            System.out.printf("\nsent this to %d: %s\n\n", s.hashCode(), json);
         }
     }
 
-    private class touchJson {
+    private class TouchJson {
         ServerMessage.ServerMessageType serverMessageType;
         String game;
-        touchJson(ServerMessage.ServerMessageType type, String game) {
+        TouchJson(ServerMessage.ServerMessageType type, String game) {
             this.serverMessageType = type;
             this.game = game;
         }
@@ -458,68 +370,38 @@ public class WebSocketHandler {
         Session s = GAMES.get(gameID).get(hash);
         ChessGame game = dataaccess.GameDataAccess.getGame(gameID);
         Gson g = new Gson();
-        touchJson n = new touchJson(ServerMessage.ServerMessageType.LOAD_GAME, game.serialize());
-        //System.out.printf("touching %d for %d only\n", gameID, s.hashCode());
+        TouchJson n = new TouchJson(ServerMessage.ServerMessageType.LOAD_GAME, game.serialize());
         String json = g.toJson(n);
         s.getRemote().sendString(json);
-        System.out.printf("\nsent this to %d: %s\n\n", s.hashCode(), json);
     }
 
     private void touchGame(int gameID) throws IOException, SQLException {
         ChessGame game = dataaccess.GameDataAccess.getGame(gameID);
         ServerMessage touch = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME, null, game);
         Gson g = new Gson();
-        touchJson n = new touchJson(ServerMessage.ServerMessageType.LOAD_GAME, game.serialize());
+        TouchJson n = new TouchJson(ServerMessage.ServerMessageType.LOAD_GAME, game.serialize());
         for(Session s : GAMES.get(gameID).values()) {
-            //System.out.printf("touching %d in gameID: %d\n", s.hashCode(), gameID);
-            //s.getRemote().sendString(touch.serialize());
-            //s.getRemote().sendString(touch.serializeJson());
             String json = g.toJson(n);
             s.getRemote().sendString(json);
-            System.out.printf("\nsent this to %d: %s\n\n", s.hashCode(), json);
         }
     }
 
-    /*
-    private class commandJson {
-        String commandType;
-        String authToken;
-        int gameID;
-
-        String serial() {
-            StringBuilder sb = new StringBuilder();
-            sb.append(this.commandType);
-            sb.append('\t');
-            sb.append(this.authToken);
-            sb.append('\t');
-            sb.append(Integer.toString(gameID));
-            return sb.toString();
-        }
-    }
-
-    private String jsonDeSerialize(String message) {
-        Gson g = new Gson();
-        commandJson j = g.fromJson(message, commandJson.class);
-        return j.serial();
-    }
-    */
-
-    private class commandJson {
+    private class CommandJson {
         UserGameCommand.CommandType commandType;
         String authToken;
         Integer gameID;
 
-        commandJson(UserGameCommand.CommandType type, String token, Integer id) {
+        CommandJson(UserGameCommand.CommandType type, String token, Integer id) {
             this.commandType = type;
             this.authToken = token;
             this.gameID = id;
         }
     }
 
-    private class moveJson extends commandJson {
+    private class MoveJson extends CommandJson {
         chess.ChessMove move;
 
-        moveJson(UserGameCommand.CommandType type, String token, Integer id, chess.ChessMove move) {
+        MoveJson(UserGameCommand.CommandType type, String token, Integer id, chess.ChessMove move) {
             super(type, token, id);
             this.move = move;
         }
@@ -530,22 +412,22 @@ public class WebSocketHandler {
         Gson g = new Gson();
 
         if(first[0].contains("CONNECT")) {
-            commandJson j = g.fromJson(message, commandJson.class);
+            CommandJson j = g.fromJson(message, CommandJson.class);
             UserGameCommand command = new UserGameCommand(j.commandType, j.authToken, j.gameID);
             return command;
         }
         if(first[0].contains("MAKE_MOVE")) {
-            moveJson j = g.fromJson(message, moveJson.class);
+            MoveJson j = g.fromJson(message, MoveJson.class);
             UserGameCommand command = new UserGameCommand(j.commandType, j.authToken, j.gameID, j.move);
             return command;
         }
         if(first[0].contains("LEAVE")) {
-            commandJson j = g.fromJson(message, commandJson.class);
+            CommandJson j = g.fromJson(message, CommandJson.class);
             UserGameCommand command = new UserGameCommand(j.commandType, j.authToken, j.gameID);
             return command;
         }
         if(first[0].contains("RESIGN")) {
-            commandJson j = g.fromJson(message, commandJson.class);
+            CommandJson j = g.fromJson(message, CommandJson.class);
             UserGameCommand command = new UserGameCommand(j.commandType, j.authToken, j.gameID);
             return command;
         }
