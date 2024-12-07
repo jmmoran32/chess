@@ -1,6 +1,5 @@
 package ws;
 
-import server.Server;
 import javax.websocket.*;
 import java.net.URI;
 import java.io.IOException;
