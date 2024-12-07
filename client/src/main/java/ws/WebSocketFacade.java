@@ -16,6 +16,7 @@ public final class WebSocketFacade extends Endpoint {
 
     public WebSocketFacade(String url, String authToken) throws Exception {
         //"ws://localhost:8080/ws"
+        //some
         this.uri = new URI(url);
         WebSocketContainer container = ContainerProvider.getWebSocketContainer();
         this.session = container.connectToServer(this, uri);
